@@ -150,7 +150,7 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, walls_group):
                 self.rect = self.rect.move(-move[0], -move[1])
         except Exception:
-            print("Используйте wasd для управления марио")
+            print("Используйте wasd для управления танком")
 
 
 player = None
