@@ -93,6 +93,7 @@ class Tile(pygame.sprite.Sprite):
             bushes_group.add(self)
         if tile_type == 'border':
             borders_group.add(self)
+        self.health = 100
 
 
 class Player(pygame.sprite.Sprite):
@@ -216,7 +217,6 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
 
 
-
 def get_coord_for_bot_spawn(new_bot):
     x = random.randint(1, 14)
     y = random.randint(1, 8)
@@ -231,6 +231,7 @@ def get_coord_for_bot_spawn(new_bot):
             new_bot.rect.x = tile_width * x
             new_bot.rect.y = tile_width * y
     return x, y
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
