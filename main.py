@@ -69,11 +69,12 @@ def load_level(filename):
 
 tile_images = {
     'wall': load_image('box.png'),
-    'empty': load_image('grass.png'),
+    'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50))
 }
-broken_box_image = load_image('broken_box.png')
+broken_box_image = load_image('box.png')
+very_broken_box_image = load_image('box.png')
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
@@ -224,6 +225,9 @@ class Shot(pygame.sprite.Sprite):
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 50:
                 pygame.sprite.spritecollideany(self, walls_group).image = broken_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
+                pygame.sprite.spritecollideany(self, walls_group).image = very_broken_box_image
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
