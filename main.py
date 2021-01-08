@@ -21,6 +21,8 @@ train_group = pygame.sprite.Group()
 
 FPS = 30
 
+SCORE = 0
+
 font = pygame.font.SysFont("Arial", 30)
 
 
@@ -28,6 +30,11 @@ def update_fps():
     fps = str(int(clock.get_fps()))
     fps_text = font.render(f'FPS: {fps}', 1, pygame.Color("white"))
     return fps_text
+
+
+def statistics():
+    stata = font.render(f'Очки: {SCORE}', 1, pygame.Color("white"))
+    return stata
 
 
 def load_image(name, colorkey=None):
@@ -176,7 +183,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = pygame.transform.rotate(self.image, 180)
             self.distinction = "a"
 
-        self.health = 100
         self.rect = self.rect.move(move)
         if pygame.sprite.spritecollideany(self, walls_group):
             self.rect = self.rect.move(-move[0], -move[1])
@@ -235,6 +241,7 @@ class Shot(pygame.sprite.Sprite):
             self.vx = 0
 
     def update(self, *args):
+        global SCORE
         self.rect = self.rect.move(self.vx, self.vy)
         if pygame.sprite.spritecollide(self, walls_group, False):
             all_sprites.remove(self)
@@ -245,6 +252,8 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, enemy_group, True):
             all_sprites.remove(self)
             shot_group.remove(self)
+            SCORE += 100
+
         if pygame.sprite.spritecollide(self, train_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -327,6 +336,7 @@ while True:
     player_group.draw(screen)
     shot_group.draw(screen)
     screen.blit(update_fps(), (880, 20))
+    screen.blit(statistics(), (880, 60))
     shot_group.update()
     walls_group.update()
     train_group.update()
