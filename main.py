@@ -73,9 +73,11 @@ tile_images = {
     'bush': load_image('leaves.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50))
 }
-broken_box_image = load_image('broken_box.png')
+low_broke_box_image = load_image('low_broke_box.png')
+medium_broke_box_image = load_image('medium_broke_box.png')
+hard_broke_box_image = load_image('hard_broke_box.png')
 player_image = load_image('main_tank2.png')
-shot_image = load_image('ammo4.png')
+shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
 
 tile_width = tile_height = 50
@@ -222,8 +224,14 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, walls_group):
             pygame.sprite.spritecollideany(self, walls_group).health -= 25
 
+            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
+                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
+
             if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                pygame.sprite.spritecollideany(self, walls_group).image = broken_box_image
+                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
+                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
