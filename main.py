@@ -75,7 +75,7 @@ tile_images = {
 }
 
 broken_box_image = load_image('broken_box.png')
-player_image = load_image('main_tank.png')
+player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
 
@@ -228,6 +228,7 @@ class Shot(pygame.sprite.Sprite):
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
+                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
 
 
 def get_coord_for_bot_spawn(new_bot):
