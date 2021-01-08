@@ -71,7 +71,7 @@ tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('grass.png'),
     'bush': load_image('leaves.png'),
-    'border': load_image('border.png')
+    'border': pygame.transform.scale(load_image('border.png'), (50, 50))
 }
 broken_box_image = load_image('broken_box.png')
 player_image = load_image('main_tank2.png')
