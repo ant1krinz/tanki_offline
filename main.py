@@ -74,7 +74,7 @@ tile_images = {
     'border': load_image('border.png')
 }
 
-player_image = load_image('main_tank.png')
+player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
 
