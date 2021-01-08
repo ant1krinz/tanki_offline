@@ -218,12 +218,14 @@ class Shot(pygame.sprite.Sprite):
 
 
 def get_coord_for_bot_spawn(new_bot):
-    x = random.randint(8, 10)
-    y = random.randint(2, 3)
+    x = random.randint(1, 14)
+    y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
     new_bot.rect.y = tile_width * y
     if enemy_group:
-        while pygame.sprite.spritecollideany(new_bot, enemy_group):
+        while pygame.sprite.spritecollideany(new_bot, walls_group) \
+                or pygame.sprite.spritecollideany(new_bot, borders_group) \
+                or pygame.sprite.spritecollideany(new_bot, player_group):
             x = random.randint(8, 10)
             y = random.randint(2, 3)
             new_bot.rect.x = tile_width * x
@@ -239,12 +241,11 @@ class Enemy(pygame.sprite.Sprite):
         get_coord_for_bot_spawn(self)
         enemy_group.add(self)
 
-for _ in range(3):
-    Enemy()
-
-
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
+
+for _ in range(10):
+    Enemy()
 
 while True:
     for event in pygame.event.get():
