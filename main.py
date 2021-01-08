@@ -13,6 +13,7 @@ player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
+shot_group = pygame.sprite.Group()
 
 FPS = 30
 
@@ -71,7 +72,8 @@ tile_images = {
     'border': load_image('border.png')
 }
 
-player_image = load_image('main_tank.png')
+player_image = load_image('main_tank2.png')
+shot_image = load_image('ammo3.png')
 
 tile_width = tile_height = 50
 
@@ -177,15 +179,51 @@ def generate_level(level):
     return new_player, x, y
 
 
+class Shot(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(shot_group, all_sprites)
+        self.image = shot_image
+        self.rect = self.image.get_rect().move(player.rect.x + 11, player.rect.y + 11)
+        if player.distinction == "w":
+            self.vy = -10
+            self.vx = 0
+
+        elif player.distinction == "a":
+            self.vy = 0
+            self.vx = -10
+
+        elif player.distinction == "d":
+            self.vy = 0
+            self.vx = 10
+
+        elif player.distinction == "s":
+            self.vy = 10
+            self.vx = 0
+
+    def update(self, *args):
+        self.rect = self.rect.move(self.vx, self.vy)
+        if pygame.sprite.spritecollide(self, walls_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+        if pygame.sprite.spritecollide(self, borders_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+
+
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
-        player.change_position()
-        clock.tick(FPS)
-        screen.fill((0, 0, 0))
-        all_sprites.draw(screen)
-        player_group.draw(screen)
-        pygame.display.flip()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if len(shot_group) < 3:
+                shot = Shot()
+    player.change_position()
+    screen.fill((0, 0, 0))
+    all_sprites.draw(screen)
+    player_group.draw(screen)
+    shot_group.draw(screen)
+    shot_group.update()
+    pygame.display.flip()
+    clock.tick(FPS)
