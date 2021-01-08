@@ -68,12 +68,13 @@ def load_level(filename):
 
 
 tile_images = {
-    'wall': load_image('wall.png'),
+    'wall': load_image('box.png'),
     'empty': load_image('grass.png'),
     'bush': load_image('leaves.png'),
     'border': load_image('border.png')
 }
 
+broken_box_image = load_image('broken_box.png')
 player_image = load_image('main_tank.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
@@ -94,6 +95,7 @@ class Tile(pygame.sprite.Sprite):
         if tile_type == 'border':
             borders_group.add(self)
         self.health = 100
+        self.type = tile_type
 
 
 class Player(pygame.sprite.Sprite):
@@ -160,6 +162,8 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, borders_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, enemy_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
@@ -216,6 +220,15 @@ class Shot(pygame.sprite.Sprite):
             all_sprites.remove(self)
             shot_group.remove(self)
 
+        if pygame.sprite.spritecollideany(self, walls_group):
+            pygame.sprite.spritecollideany(self, walls_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
+                pygame.sprite.spritecollideany(self, walls_group).image = broken_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
+                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
+
 
 def get_coord_for_bot_spawn(new_bot):
     x = random.randint(1, 14)
@@ -261,6 +274,7 @@ while True:
     player_group.draw(screen)
     shot_group.draw(screen)
     shot_group.update()
+    walls_group.update()
     enemy_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
