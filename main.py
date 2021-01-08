@@ -73,7 +73,6 @@ tile_images = {
     'bush': load_image('leaves.png'),
     'border': load_image('border.png')
 }
-
 broken_box_image = load_image('broken_box.png')
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
