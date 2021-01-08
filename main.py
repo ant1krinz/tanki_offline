@@ -73,10 +73,9 @@ tile_images = {
     'bush': load_image('leaves.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50))
 }
-broken_box_image = load_image('box.png')
-very_broken_box_image = load_image('box.png')
+broken_box_image = load_image('broken_box.png')
 player_image = load_image('main_tank2.png')
-shot_image = load_image('ammo3.png')
+shot_image = load_image('ammo4.png')
 enemy_image = load_image('enemy_tank1.png')
 
 tile_width = tile_height = 50
@@ -225,9 +224,6 @@ class Shot(pygame.sprite.Sprite):
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 50:
                 pygame.sprite.spritecollideany(self, walls_group).image = broken_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                pygame.sprite.spritecollideany(self, walls_group).image = very_broken_box_image
 
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
