@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import random
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -14,6 +15,7 @@ walls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 
 FPS = 30
 
@@ -72,8 +74,9 @@ tile_images = {
     'border': load_image('border.png')
 }
 
-player_image = load_image('main_tank2.png')
+player_image = load_image('main_tank.png')
 shot_image = load_image('ammo3.png')
+enemy_image = load_image('enemy_tank1.png')
 
 tile_width = tile_height = 50
 
@@ -208,6 +211,37 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
+        if pygame.sprite.spritecollide(self, enemy_group, True):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+
+
+
+def get_coord_for_bot_spawn(new_bot):
+    x = random.randint(8, 10)
+    y = random.randint(2, 3)
+    new_bot.rect.x = tile_width * x
+    new_bot.rect.y = tile_width * y
+    if enemy_group:
+        while pygame.sprite.spritecollideany(new_bot, enemy_group):
+            x = random.randint(8, 10)
+            y = random.randint(2, 3)
+            new_bot.rect.x = tile_width * x
+            new_bot.rect.y = tile_width * y
+    return x, y
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = enemy_image
+        self.rect = self.image.get_rect()
+        self.image = enemy_image
+        get_coord_for_bot_spawn(self)
+        enemy_group.add(self)
+
+for _ in range(3):
+    Enemy()
+
 
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
@@ -225,5 +259,6 @@ while True:
     player_group.draw(screen)
     shot_group.draw(screen)
     shot_group.update()
+    enemy_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
