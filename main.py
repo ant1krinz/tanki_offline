@@ -12,6 +12,7 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
+borders_group = pygame.sprite.Group()
 
 FPS = 30
 
@@ -66,7 +67,8 @@ def load_level(filename):
 tile_images = {
     'wall': load_image('wall.png'),
     'empty': load_image('grass.png'),
-    'bush': load_image('leaves.png')
+    'bush': load_image('leaves.png'),
+    'border': load_image('border.png')
 }
 
 player_image = load_image('main_tank.png')
@@ -84,6 +86,8 @@ class Tile(pygame.sprite.Sprite):
             walls_group.add(self)
         if tile_type == 'bush':
             bushes_group.add(self)
+        if tile_type == 'border':
+            borders_group.add(self)
 
 
 class Player(pygame.sprite.Sprite):
@@ -148,6 +152,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.rect.move(move)
         if pygame.sprite.spritecollideany(self, walls_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, borders_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
@@ -163,6 +169,8 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == ',':
                 Tile('bush', x, y)
+            elif level[y][x] == '%':
+                Tile('border', x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
