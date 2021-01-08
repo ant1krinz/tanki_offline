@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 import random
+import time
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -18,6 +19,14 @@ shot_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 
 FPS = 30
+
+font = pygame.font.SysFont("Arial", 30)
+
+
+def update_fps():
+    fps = str(int(clock.get_fps()))
+    fps_text = font.render(f'FPS: {fps}', 1, pygame.Color("white"))
+    return fps_text
 
 
 def load_image(name, colorkey=None):
@@ -276,11 +285,13 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
                 shot = Shot()
+    start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     player_group.draw(screen)
     shot_group.draw(screen)
+    screen.blit(update_fps(), (820, 20))
     shot_group.update()
     walls_group.update()
     enemy_group.draw(screen)
