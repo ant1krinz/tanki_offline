@@ -291,7 +291,7 @@ while True:
     all_sprites.draw(screen)
     player_group.draw(screen)
     shot_group.draw(screen)
-    screen.blit(update_fps(), (820, 20))
+    screen.blit(update_fps(), (880, 20))
     shot_group.update()
     walls_group.update()
     enemy_group.draw(screen)
