@@ -23,6 +23,8 @@ FPS = 30
 
 SCORE = 0
 
+LVL = 1
+
 font = pygame.font.SysFont("Arial", 30)
 
 
@@ -74,6 +76,38 @@ def start_screen():
 
 
 start_screen()
+
+def menu():
+    screen.fill((255, 255, 255))
+    fon = pygame.transform.scale(load_image('putin.jpg'), (WIDTH - 400, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    texts = ["В бой!", "Настройки", "Выход"]
+    width = 5
+    for i in range(3):
+        text = font.render(texts[i], 1, (255, 255, 255))
+        text_h = text.get_height()
+        text_w = text.get_width()
+        text_x = WIDTH // 1.2 - text.get_width() // 1.4
+        text_y = (HEIGHT // 5) * i + text_h // 2 + HEIGHT // 5
+        pygame.draw.rect(screen, (255, 0, 0), (text_x - 10 - width // 2, text_y - 10,
+                                               text_w + 20 - width // 2, text_h + 20), 0)
+        pygame.draw.rect(screen, (0, 0, 0), (text_x - 10 - width // 2, text_y - 10,
+                                               text_w + 20 - width // 2, text_h + 20), width)
+        screen.blit(text, (text_x, text_y))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+menu()
 
 
 def load_level(filename):
@@ -291,6 +325,24 @@ class Shot(pygame.sprite.Sprite):
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
 
 
+def update_level():
+    global SCORE, LVL, player, level_x, level_y
+    if SCORE == 1000 and LVL == 1:
+        all_sprites.empty()
+        shot_group.empty()
+        walls_group.empty()
+        player_group.empty()
+        borders_group.empty()
+        tiles_group.empty()
+        enemy_group.empty()
+        bushes_group.empty()
+        train_group.empty()
+        player, level_x, level_y = generate_level(load_level("level2.txt"))
+        for _ in range(10):
+            Enemy()
+        LVL = 2
+
+
 def get_coord_for_bot_spawn(new_bot):
     x = random.randint(1, 14)
     y = random.randint(1, 8)
@@ -329,6 +381,7 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
                 shot = Shot()
+    update_level()
     start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
