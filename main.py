@@ -109,6 +109,9 @@ hard_broke_box_image = load_image('hard_broke_box.png')
 low_broke_train_image = pygame.transform.rotate(load_image('low_broke_train.png'), 90)
 medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_train.png'), 90)
 hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_train.png'), 90)
+low_broke_car_image = pygame.transform.rotate(load_image('low_broke_car.png'), 90)
+medium_broke_car_image = pygame.transform.rotate(load_image('medium_broke_car.png'), 90)
+hard_broke_car_image = pygame.transform.rotate(load_image('hard_broke_car.png'), 90)
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
@@ -277,6 +280,22 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, cars_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
+
+        if pygame.sprite.spritecollideany(self, cars_group):
+            pygame.sprite.spritecollideany(self, cars_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 75:
+                pygame.sprite.spritecollideany(self, cars_group).image = low_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 50:
+                pygame.sprite.spritecollideany(self, cars_group).image = medium_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 25:
+                pygame.sprite.spritecollideany(self, cars_group).image = hard_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 0:
+                pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
+                cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
 
         if pygame.sprite.spritecollideany(self, walls_group):
             pygame.sprite.spritecollideany(self, walls_group).health -= 25
