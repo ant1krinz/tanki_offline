@@ -18,6 +18,7 @@ borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
+cars_group = pygame.sprite.Group()
 
 FPS = 30
 
@@ -93,6 +94,7 @@ tile_images = {
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': load_image('relsi.png'),
     'train': load_image('train.png'),
+    'car': pygame.transform.rotate(load_image('car.png'), 90),
     'broke_relsi': load_image('broken_relsi.png')
 }
 low_broke_box_image = load_image('low_broke_box.png')
@@ -122,6 +124,8 @@ class Tile(pygame.sprite.Sprite):
             borders_group.add(self)
         if tile_type == 'train':
             train_group.add(self)
+        if tile_type == 'car':
+            cars_group.add(self)
         self.health = 100
         self.type = tile_type
 
@@ -194,6 +198,8 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, train_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, cars_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
@@ -218,6 +224,8 @@ def generate_level(level):
                 Tile('relsi', x, y)
             elif level[y][x] == '*':
                 Tile('train', x, y)
+            elif level[y][x] == '$':
+                Tile('car', x, y)
     return new_player, x, y
 
 
@@ -257,6 +265,10 @@ class Shot(pygame.sprite.Sprite):
             SCORE += 100
 
         if pygame.sprite.spritecollide(self, train_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+
+        if pygame.sprite.spritecollide(self, cars_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
 
@@ -305,6 +317,7 @@ def update_level():
         enemy_group.empty()
         bushes_group.empty()
         train_group.empty()
+        cars_group.empty()
         player, level_x, level_y = generate_level(load_level("level2.txt"))
         for _ in range(10):
             Enemy()
