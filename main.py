@@ -18,12 +18,21 @@ borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
+cars_group = pygame.sprite.Group()
 
 FPS = 30
 
 SCORE = 0
 
+LVL = 1
+
 font = pygame.font.SysFont("Arial", 30)
+
+
+def show_lvl():
+    global LVL
+    lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
+    return lvl_text
 
 
 def update_fps():
@@ -89,16 +98,20 @@ tile_images = {
     'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
-    'relsi': load_image('relsi.png'),
-    'train': load_image('train.png'),
-    'broke_relsi': load_image('broken_relsi.png')
+    'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
+    'train': pygame.transform.rotate(load_image('train.png'), 90),
+    'car': pygame.transform.rotate(load_image('blue_car.png'), 90),
+    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90)
 }
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
 hard_broke_box_image = load_image('hard_broke_box.png')
-low_broke_train_image = load_image('low_broke_train.png')
-medium_broke_train_image = load_image('medium_broke_train.png')
-hard_broke_train_image = load_image('hard_broke_train.png')
+low_broke_train_image = pygame.transform.rotate(load_image('low_broke_train.png'), 90)
+medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_train.png'), 90)
+hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_train.png'), 90)
+low_broke_car_image = pygame.transform.rotate(load_image('low_broke_car.png'), 90)
+medium_broke_car_image = pygame.transform.rotate(load_image('medium_broke_car.png'), 90)
+hard_broke_car_image = pygame.transform.rotate(load_image('hard_broke_car.png'), 90)
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
@@ -120,6 +133,8 @@ class Tile(pygame.sprite.Sprite):
             borders_group.add(self)
         if tile_type == 'train':
             train_group.add(self)
+        if tile_type == 'car':
+            cars_group.add(self)
         self.health = 100
         self.type = tile_type
 
@@ -192,6 +207,8 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, train_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, cars_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
@@ -216,6 +233,8 @@ def generate_level(level):
                 Tile('relsi', x, y)
             elif level[y][x] == '*':
                 Tile('train', x, y)
+            elif level[y][x] == '$':
+                Tile('car', x, y)
     return new_player, x, y
 
 
@@ -249,7 +268,7 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
-        if pygame.sprite.spritecollide(self, enemy_group, True):
+        for sprite in pygame.sprite.spritecollide(self, enemy_group, True):
             all_sprites.remove(self)
             shot_group.remove(self)
             SCORE += 100
@@ -257,6 +276,26 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, train_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
+
+        if pygame.sprite.spritecollide(self, cars_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+
+        if pygame.sprite.spritecollideany(self, cars_group):
+            pygame.sprite.spritecollideany(self, cars_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 75:
+                pygame.sprite.spritecollideany(self, cars_group).image = low_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 50:
+                pygame.sprite.spritecollideany(self, cars_group).image = medium_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 25:
+                pygame.sprite.spritecollideany(self, cars_group).image = hard_broke_car_image
+
+            if pygame.sprite.spritecollideany(self, cars_group).health == 0:
+                pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
+                cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
 
         if pygame.sprite.spritecollideany(self, walls_group):
             pygame.sprite.spritecollideany(self, walls_group).health -= 25
@@ -289,6 +328,25 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, train_group).health == 0:
                 pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
+
+
+def update_level():
+    global SCORE, LVL, player, level_x, level_y
+    if SCORE == 1000 and LVL == 1:
+        all_sprites.empty()
+        shot_group.empty()
+        walls_group.empty()
+        player_group.empty()
+        borders_group.empty()
+        tiles_group.empty()
+        enemy_group.empty()
+        bushes_group.empty()
+        train_group.empty()
+        cars_group.empty()
+        player, level_x, level_y = generate_level(load_level("level2.txt"))
+        for _ in range(10):
+            Enemy()
+        LVL = 2
 
 
 def get_coord_for_bot_spawn(new_bot):
@@ -329,6 +387,7 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
                 shot = Shot()
+    update_level()
     start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
@@ -336,7 +395,8 @@ while True:
     player_group.draw(screen)
     shot_group.draw(screen)
     screen.blit(update_fps(), (880, 20))
-    screen.blit(statistics(), (880, 60))
+    screen.blit(show_lvl(), (880, 60))
+    screen.blit(statistics(), (880, 100))
     shot_group.update()
     walls_group.update()
     train_group.update()
