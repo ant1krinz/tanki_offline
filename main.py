@@ -28,6 +28,7 @@ LVL = 1
 
 font = pygame.font.SysFont("Arial", 30)
 
+
 def show_lvl():
     global LVL
     lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
@@ -105,9 +106,9 @@ tile_images = {
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
 hard_broke_box_image = load_image('hard_broke_box.png')
-low_broke_train_image = load_image('low_broke_train.png')
-medium_broke_train_image = load_image('medium_broke_train.png')
-hard_broke_train_image = load_image('hard_broke_train.png')
+low_broke_train_image = pygame.transform.rotate(load_image('low_broke_train.png'), 90)
+medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_train.png'), 90)
+hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_train.png'), 90)
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
