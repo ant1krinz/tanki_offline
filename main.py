@@ -100,7 +100,7 @@ tile_images = {
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
     'train': pygame.transform.rotate(load_image('train.png'), 90),
-    'car': pygame.transform.rotate(load_image('car.png'), 90),
+    'car': pygame.transform.rotate(load_image('blue_car.png'), 90),
     'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90)
 }
 low_broke_box_image = load_image('low_broke_box.png')
