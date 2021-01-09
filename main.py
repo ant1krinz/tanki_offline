@@ -399,7 +399,9 @@ def bot_spawn(new_bot):
         while pygame.sprite.spritecollideany(new_bot, walls_group) \
                 or pygame.sprite.spritecollideany(new_bot, borders_group) \
                 or pygame.sprite.spritecollideany(new_bot, player_group) \
-                or pygame.sprite.spritecollideany(new_bot, enemy_group):
+                or pygame.sprite.spritecollideany(new_bot, enemy_group) \
+                or pygame.sprite.spritecollideany(new_bot, train_group) \
+                or pygame.sprite.spritecollideany(new_bot, cars_group):
             x = random.randint(8, 10)
             y = random.randint(2, 3)
             new_bot.rect.x = tile_width * x
