@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 import random
+import time
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -16,8 +17,24 @@ bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
+train_group = pygame.sprite.Group()
 
 FPS = 30
+
+SCORE = 0
+
+font = pygame.font.SysFont("Arial", 30)
+
+
+def update_fps():
+    fps = str(int(clock.get_fps()))
+    fps_text = font.render(f'FPS: {fps}', 1, pygame.Color("white"))
+    return fps_text
+
+
+def statistics():
+    stata = font.render(f'Очки: {SCORE}', 1, pygame.Color("white"))
+    return stata
 
 
 def load_image(name, colorkey=None):
@@ -68,12 +85,20 @@ def load_level(filename):
 
 
 tile_images = {
-    'wall': load_image('wall.png'),
-    'empty': load_image('grass.png'),
+    'wall': load_image('box.png'),
+    'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
-    'border': load_image('border.png')
+    'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
+    'relsi': load_image('relsi.png'),
+    'train': load_image('train.png'),
+    'broke_relsi': load_image('broken_relsi.png')
 }
-
+low_broke_box_image = load_image('low_broke_box.png')
+medium_broke_box_image = load_image('medium_broke_box.png')
+hard_broke_box_image = load_image('hard_broke_box.png')
+low_broke_train_image = load_image('low_broke_train.png')
+medium_broke_train_image = load_image('medium_broke_train.png')
+hard_broke_train_image = load_image('hard_broke_train.png')
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
@@ -93,6 +118,10 @@ class Tile(pygame.sprite.Sprite):
             bushes_group.add(self)
         if tile_type == 'border':
             borders_group.add(self)
+        if tile_type == 'train':
+            train_group.add(self)
+        self.health = 100
+        self.type = tile_type
 
 
 class Player(pygame.sprite.Sprite):
@@ -159,6 +188,10 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, borders_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, enemy_group):
+            self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, train_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
@@ -179,6 +212,10 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
+            elif level[y][x] == '!':
+                Tile('relsi', x, y)
+            elif level[y][x] == '*':
+                Tile('train', x, y)
     return new_player, x, y
 
 
@@ -204,6 +241,7 @@ class Shot(pygame.sprite.Sprite):
             self.vx = 0
 
     def update(self, *args):
+        global SCORE
         self.rect = self.rect.move(self.vx, self.vy)
         if pygame.sprite.spritecollide(self, walls_group, False):
             all_sprites.remove(self)
@@ -214,7 +252,43 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, enemy_group, True):
             all_sprites.remove(self)
             shot_group.remove(self)
+            SCORE += 100
 
+        if pygame.sprite.spritecollide(self, train_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+
+        if pygame.sprite.spritecollideany(self, walls_group):
+            pygame.sprite.spritecollideany(self, walls_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
+                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
+                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
+                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
+
+            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
+                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
+                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
+
+        if pygame.sprite.spritecollideany(self, train_group):
+            pygame.sprite.spritecollideany(self, train_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, train_group).health == 75:
+                pygame.sprite.spritecollideany(self, train_group).image = low_broke_train_image
+
+            if pygame.sprite.spritecollideany(self, train_group).health == 50:
+                pygame.sprite.spritecollideany(self, train_group).image = medium_broke_train_image
+
+            if pygame.sprite.spritecollideany(self, train_group).health == 25:
+                pygame.sprite.spritecollideany(self, train_group).image = hard_broke_train_image
+
+            if pygame.sprite.spritecollideany(self, train_group).health == 0:
+                pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
+                train_group.remove(pygame.sprite.spritecollideany(self, train_group))
 
 
 def get_coord_for_bot_spawn(new_bot):
@@ -231,6 +305,7 @@ def get_coord_for_bot_spawn(new_bot):
             new_bot.rect.x = tile_width * x
             new_bot.rect.y = tile_width * y
     return x, y
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -254,12 +329,17 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
                 shot = Shot()
+    start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     player_group.draw(screen)
     shot_group.draw(screen)
+    screen.blit(update_fps(), (880, 20))
+    screen.blit(statistics(), (880, 60))
     shot_group.update()
+    walls_group.update()
+    train_group.update()
     enemy_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
