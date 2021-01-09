@@ -92,10 +92,10 @@ tile_images = {
     'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
-    'relsi': load_image('relsi.png'),
-    'train': load_image('train.png'),
+    'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
+    'train': pygame.transform.rotate(load_image('train.png'), 90),
     'car': pygame.transform.rotate(load_image('car.png'), 90),
-    'broke_relsi': load_image('broken_relsi.png')
+    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90)
 }
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
