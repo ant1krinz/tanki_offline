@@ -241,8 +241,8 @@ def generate_level(level):
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(shot_group, all_sprites)
-        self.image = shot_image
-        self.rect = self.image.get_rect().move(player.rect.x + 11, player.rect.y + 11)
+        self.image = pygame.transform.scale(shot_image, (20, 20))
+        self.rect = self.image.get_rect().move(player.rect.x + 15, player.rect.y + 15)
         if player.distinction == "w":
             self.vy = -10
             self.vx = 0
