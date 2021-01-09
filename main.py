@@ -330,6 +330,29 @@ class Shot(pygame.sprite.Sprite):
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
 
 
+def level():
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 50)
+    text = font.render(f"УРОВЕНЬ {LVL}", True, (100, 255, 100))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height()
+    font2 = pygame.font.Font(None, 40)
+    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (100, 255, 100))
+    text_x2 = WIDTH // 4 - text.get_width() // 4
+    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
+    screen.blit(text, (text_x, text_y))
+    screen.blit(second_text, (text_x2, text_y2))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+level()
+
 def update_level():
     global SCORE, LVL, player, level_x, level_y
     if SCORE == 1000 and LVL == 1:
@@ -347,6 +370,7 @@ def update_level():
         for _ in range(10):
             Enemy()
         LVL = 2
+        level()
 
 
 def get_coord_for_bot_spawn(new_bot):
