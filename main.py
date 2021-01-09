@@ -28,6 +28,11 @@ LVL = 1
 
 font = pygame.font.SysFont("Arial", 30)
 
+def show_lvl():
+    global LVL
+    lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
+    return lvl_text
+
 
 def update_fps():
     fps = str(int(clock.get_fps()))
@@ -370,7 +375,8 @@ while True:
     player_group.draw(screen)
     shot_group.draw(screen)
     screen.blit(update_fps(), (880, 20))
-    screen.blit(statistics(), (880, 60))
+    screen.blit(show_lvl(), (880, 60))
+    screen.blit(statistics(), (880, 100))
     shot_group.update()
     walls_group.update()
     train_group.update()
