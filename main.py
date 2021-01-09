@@ -374,7 +374,7 @@ def update_level():
         level()
 
 
-def get_coord_for_bot_spawn(new_bot):
+def bot_spawn(new_bot):
     x = random.randint(1, 14)
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
@@ -382,7 +382,8 @@ def get_coord_for_bot_spawn(new_bot):
     if enemy_group:
         while pygame.sprite.spritecollideany(new_bot, walls_group) \
                 or pygame.sprite.spritecollideany(new_bot, borders_group) \
-                or pygame.sprite.spritecollideany(new_bot, player_group):
+                or pygame.sprite.spritecollideany(new_bot, player_group) \
+                or pygame.sprite.spritecollideany(new_bot, enemy_group):
             x = random.randint(8, 10)
             y = random.randint(2, 3)
             new_bot.rect.x = tile_width * x
@@ -397,7 +398,8 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.image = enemy_image
         self.distinction = 's'
-        get_coord_for_bot_spawn(self)
+        bot_spawn(self)
+        self.health = 60
         enemy_group.add(self)
         enemy_group2.add(self)
 
