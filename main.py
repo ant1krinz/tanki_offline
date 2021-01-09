@@ -23,6 +23,8 @@ FPS = 30
 
 SCORE = 0
 
+LVL = 1
+
 font = pygame.font.SysFont("Arial", 30)
 
 
@@ -291,6 +293,24 @@ class Shot(pygame.sprite.Sprite):
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
 
 
+def update_level():
+    global SCORE, LVL, player, level_x, level_y
+    if SCORE == 1000 and LVL == 1:
+        all_sprites.empty()
+        shot_group.empty()
+        walls_group.empty()
+        player_group.empty()
+        borders_group.empty()
+        tiles_group.empty()
+        enemy_group.empty()
+        bushes_group.empty()
+        train_group.empty()
+        player, level_x, level_y = generate_level(load_level("level2.txt"))
+        for _ in range(10):
+            Enemy()
+        LVL = 2
+
+
 def get_coord_for_bot_spawn(new_bot):
     x = random.randint(1, 14)
     y = random.randint(1, 8)
@@ -329,6 +349,7 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
                 shot = Shot()
+    update_level()
     start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
