@@ -334,11 +334,11 @@ class Shot(pygame.sprite.Sprite):
 def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
-    text = font.render(f"УРОВЕНЬ {LVL}", True, (100, 255, 100))
+    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 2 - text.get_height()
     font2 = pygame.font.Font(None, 40)
-    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (100, 255, 100))
+    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
     text_x2 = WIDTH // 4 - text.get_width() // 4
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
