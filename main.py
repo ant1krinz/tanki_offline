@@ -251,7 +251,7 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
-        if pygame.sprite.spritecollide(self, enemy_group, True):
+        for sprite in pygame.sprite.spritecollide(self, enemy_group, True):
             all_sprites.remove(self)
             shot_group.remove(self)
             SCORE += 100
