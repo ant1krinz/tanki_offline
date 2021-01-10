@@ -27,32 +27,39 @@ SCORE = 0
 
 LVL = 1
 
-
-
 font = pygame.font.SysFont("Century Gothic", 30)
 font_for_fps = pygame.font.SysFont('Century Gothic', 40)
-
 
 
 def show_info():
     fps = update_fps()
     level_num = show_lvl()
     stat = statistics()
-    hp = show_hp()
+    hp1 = show_hp()[0]
+    hp2 = show_hp()[1]
+
     screen.blit(fps, (925 - fps.get_width() // 2, 20))
     screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
     screen.blit(stat, (925 - stat.get_width() // 2, 120))
-    screen.blit(hp, (925 - hp.get_width() // 2, 160))
+    screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
+    screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
 
 
 def show_hp():
-    hp_text = font.render(f'Здоровье {player.health}', 1, pygame.Color("red"))
-    return hp_text
+    hp_text1 = font.render(f'Здоровье: ', 1, pygame.Color("white"))
+    hp_text2_red = font.render(f'{player.health}', 1, pygame.Color("#F55A46"))
+    hp_text2_green = font.render(f'{player.health}', 1, pygame.Color("#2CE66D"))
+
+    if player.health == 100:
+        return (hp_text1, hp_text2_green)
+
+    if player.health == 50:
+        return (hp_text1, hp_text2_red)
 
 
 def show_lvl():
     global LVL
-    lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
+    lvl_text = font.render(f'Уровень: {LVL}', 1, pygame.Color("white"))
     return lvl_text
 
 
