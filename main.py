@@ -30,6 +30,18 @@ LVL = 1
 font = pygame.font.SysFont("Arial", 30)
 
 
+def show_info():
+    screen.blit(update_fps(), (880, 20))
+    screen.blit(show_lvl(), (860, 80))
+    screen.blit(statistics(), (860, 120))
+    screen.blit(show_hp(), (860, 160))
+
+
+def show_hp():
+    hp_text = font.render(f'Здоровье {player.health}', 1, pygame.Color("white"))
+    return hp_text
+
+
 def show_lvl():
     global LVL
     lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
@@ -84,38 +96,6 @@ def start_screen():
 
 
 start_screen()
-
-def menu():
-    screen.fill((255, 255, 255))
-    fon = pygame.transform.scale(load_image('putin.jpg'), (WIDTH - 400, HEIGHT))
-    screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 50)
-    texts = ["В бой!", "Настройки", "Выход"]
-    width = 5
-    for i in range(3):
-        text = font.render(texts[i], 1, (255, 255, 255))
-        text_h = text.get_height()
-        text_w = text.get_width()
-        text_x = WIDTH // 1.2 - text.get_width() // 1.4
-        text_y = (HEIGHT // 5) * i + text_h // 2 + HEIGHT // 5
-        pygame.draw.rect(screen, (255, 0, 0), (text_x - 10 - width // 2, text_y - 10,
-                                               text_w + 20 - width // 2, text_h + 20), 0)
-        pygame.draw.rect(screen, (0, 0, 0), (text_x - 10 - width // 2, text_y - 10,
-                                               text_w + 20 - width // 2, text_h + 20), width)
-        screen.blit(text, (text_x, text_y))
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return
-        pygame.display.flip()
-        clock.tick(FPS)
-
-
-menu()
 
 
 def load_level(filename):
@@ -179,6 +159,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
+        self.health = 100
 
     def change_position(self):
         move = (0, 0)
@@ -323,7 +304,7 @@ class Shot(pygame.sprite.Sprite):
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
                     all_sprites.remove(sprite)
-                    SCORE += 100
+
             enemy_group2.add(self.parent)
 
         if pygame.sprite.spritecollideany(self, cars_group):
@@ -377,6 +358,8 @@ class Shot(pygame.sprite.Sprite):
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
             all_sprites.remove(self)
             shot_group.remove(self)
+
+
 def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
@@ -398,7 +381,10 @@ def level():
                 return
         pygame.display.flip()
         clock.tick(FPS)
+
+
 level()
+
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y
@@ -417,8 +403,7 @@ def update_level():
         for _ in range(10):
             Enemy()
         LVL = 2
-        
-level()
+        level()
 
 
 def bot_spawn(new_bot):
@@ -579,6 +564,7 @@ class Enemy(pygame.sprite.Sprite):
         if res3 == 1:
             Shot(self.rect.x, self.rect.y, self)
 
+
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
 for _ in range(10):
@@ -590,18 +576,15 @@ while True:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
-              shot = Shot(player.rect.x, player.rect.y, player)
-
+                shot = Shot(player.rect.x, player.rect.y, player)
     update_level()
     start_time = time.time()
     player.change_position()
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
+    show_info()
     player_group.draw(screen)
     shot_group.draw(screen)
-    screen.blit(update_fps(), (880, 20))
-    screen.blit(show_lvl(), (880, 60))
-    screen.blit(statistics(), (880, 100))
     shot_group.update()
     walls_group.update()
     train_group.update()
