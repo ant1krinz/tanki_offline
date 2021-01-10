@@ -85,6 +85,38 @@ def start_screen():
 
 start_screen()
 
+def menu():
+    screen.fill((255, 255, 255))
+    fon = pygame.transform.scale(load_image('putin.jpg'), (WIDTH - 400, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    texts = ["В бой!", "Настройки", "Выход"]
+    width = 5
+    for i in range(3):
+        text = font.render(texts[i], 1, (255, 255, 255))
+        text_h = text.get_height()
+        text_w = text.get_width()
+        text_x = WIDTH // 1.2 - text.get_width() // 1.4
+        text_y = (HEIGHT // 5) * i + text_h // 2 + HEIGHT // 5
+        pygame.draw.rect(screen, (255, 0, 0), (text_x - 10 - width // 2, text_y - 10,
+                                               text_w + 20 - width // 2, text_h + 20), 0)
+        pygame.draw.rect(screen, (0, 0, 0), (text_x - 10 - width // 2, text_y - 10,
+                                               text_w + 20 - width // 2, text_h + 20), width)
+        screen.blit(text, (text_x, text_y))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+menu()
+
 
 def load_level(filename):
     filename = "data/" + filename
@@ -345,8 +377,6 @@ class Shot(pygame.sprite.Sprite):
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
             all_sprites.remove(self)
             shot_group.remove(self)
-
-
 def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
@@ -387,7 +417,8 @@ def update_level():
         for _ in range(10):
             Enemy()
         LVL = 2
-        level()
+        
+level()
 
 
 def bot_spawn(new_bot):
@@ -559,7 +590,8 @@ while True:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
-                shot = Shot(player.rect.x, player.rect.y, player)
+              shot = Shot(player.rect.x, player.rect.y, player)
+
     update_level()
     start_time = time.time()
     player.change_position()
