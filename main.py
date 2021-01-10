@@ -27,18 +27,26 @@ SCORE = 0
 
 LVL = 1
 
-font = pygame.font.SysFont("Arial", 30)
+
+
+font = pygame.font.SysFont("Century Gothic", 30)
+font_for_fps = pygame.font.SysFont('Century Gothic', 40)
+
 
 
 def show_info():
-    screen.blit(update_fps(), (880, 20))
-    screen.blit(show_lvl(), (860, 80))
-    screen.blit(statistics(), (860, 120))
-    screen.blit(show_hp(), (860, 160))
+    fps = update_fps()
+    level_num = show_lvl()
+    stat = statistics()
+    hp = show_hp()
+    screen.blit(fps, (925 - fps.get_width() // 2, 20))
+    screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
+    screen.blit(stat, (925 - stat.get_width() // 2, 120))
+    screen.blit(hp, (925 - hp.get_width() // 2, 160))
 
 
 def show_hp():
-    hp_text = font.render(f'Здоровье {player.health}', 1, pygame.Color("white"))
+    hp_text = font.render(f'Здоровье {player.health}', 1, pygame.Color("red"))
     return hp_text
 
 
@@ -50,7 +58,7 @@ def show_lvl():
 
 def update_fps():
     fps = str(int(clock.get_fps()))
-    fps_text = font.render(f'FPS: {fps}', 1, pygame.Color("white"))
+    fps_text = font_for_fps.render(f'FPS: {fps}', 1, pygame.Color("white"))
     return fps_text
 
 
