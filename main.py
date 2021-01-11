@@ -85,6 +85,7 @@ def start_screen():
 
 start_screen()
 
+
 def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
@@ -121,7 +122,6 @@ shot_image = load_image('ammo3.png')
 enemy_image = load_image('enemy_tank1.png')
 low_broke_tank_image = load_image('low_broke_tank.png')
 medium_broke_tank_image = load_image('medium_broke_tank.png')
-
 
 tile_width = tile_height = 50
 
@@ -271,9 +271,6 @@ class Shot(pygame.sprite.Sprite):
     def update(self, *args):
         global SCORE
         self.rect = self.rect.move(self.vx, self.vy)
-        if pygame.sprite.spritecollide(self, walls_group, False):
-            all_sprites.remove(self)
-            shot_group.remove(self)
 
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
@@ -287,6 +284,7 @@ class Shot(pygame.sprite.Sprite):
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
                     all_sprites.remove(sprite)
+                    enemy_group2.remove(sprite)
                     SCORE += 100
                 change_enemy_image(sprite)
         else:
@@ -297,6 +295,7 @@ class Shot(pygame.sprite.Sprite):
                 sprite.health -= 20
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
+                    enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
                 change_enemy_image(sprite)
             enemy_group2.add(self.parent)
@@ -316,6 +315,8 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, cars_group).health == 0:
                 pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
                 cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, cars_group))
+
             all_sprites.remove(self)
             shot_group.remove(self)
 
@@ -334,6 +335,10 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
                 walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
 
         if pygame.sprite.spritecollideany(self, train_group):
             pygame.sprite.spritecollideany(self, train_group).health -= 25
@@ -350,8 +355,12 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, train_group).health == 0:
                 pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, train_group))
+
             all_sprites.remove(self)
             shot_group.remove(self)
+
+
 def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
@@ -373,7 +382,10 @@ def level():
                 return
         pygame.display.flip()
         clock.tick(FPS)
+
+
 level()
+
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y
@@ -553,6 +565,7 @@ class Enemy(pygame.sprite.Sprite):
         if res3 == 1:
             Shot(self.rect.x, self.rect.y, self)
 
+
 def change_enemy_image(enemy):
     hp = enemy.health
     dist = enemy.distinction
@@ -588,7 +601,7 @@ while True:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group) < 3:
-              shot = Shot(player.rect.x, player.rect.y, player)
+                shot = Shot(player.rect.x, player.rect.y, player)
 
     update_level()
     start_time = time.time()
