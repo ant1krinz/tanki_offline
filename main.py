@@ -41,8 +41,12 @@ def show_info():
     screen.blit(fps, (925 - fps.get_width() // 2, 20))
     screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
     screen.blit(stat, (925 - stat.get_width() // 2, 120))
-    screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
-    screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
+    if player.health == 100:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
+    elif player.health == 50:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 160))
 
 
 def show_hp():
@@ -174,7 +178,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
-        self.health = 100
+        self.health = 50
 
     def change_position(self):
         move = (0, 0)
@@ -319,6 +323,10 @@ class Shot(pygame.sprite.Sprite):
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
                     all_sprites.remove(sprite)
+            if pygame.sprite.spritecollideany(self, player_group):
+                player.health -= 50
+                shot_group.remove(self)
+                all_sprites.remove(self)
 
             enemy_group2.add(self.parent)
 
