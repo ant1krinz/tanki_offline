@@ -501,8 +501,8 @@ def bot_spawn(new_bot):
                 or pygame.sprite.spritecollideany(new_bot, enemy_group) \
                 or pygame.sprite.spritecollideany(new_bot, train_group) \
                 or pygame.sprite.spritecollideany(new_bot, cars_group):
-            x = random.randint(8, 10)
-            y = random.randint(2, 3)
+            x = random.randint(1, 14)
+            y = random.randint(1, 8)
             new_bot.rect.x = tile_width * x
             new_bot.rect.y = tile_width * y
     return x, y
@@ -677,7 +677,7 @@ def change_enemy_image(enemy):
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(15):
+for _ in range(13):
     Enemy()
 
 while True:
