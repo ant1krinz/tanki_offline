@@ -105,6 +105,17 @@ def show_enemies_left():
     return left
 
 
+def auto_spawn():
+    global ENEMIES_LEFT
+    necessary = 1300 * LVL - SCORE
+    if ENEMIES_LEFT <= 5:
+        if necessary > ENEMIES_LEFT * 100:
+            Enemy()
+            ENEMIES_LEFT += 1
+
+
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -378,7 +389,6 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group.remove(sprite)
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
-                    SCORE += 100
                     ENEMIES_LEFT -= 1
                 change_enemy_image(sprite)
                 if self in shot_group_player:
@@ -725,4 +735,5 @@ while True:
     enemy_group.draw(screen)
     enemy_group.update()
     pygame.display.flip()
+    auto_spawn()
     clock.tick(FPS)
