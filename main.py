@@ -108,6 +108,15 @@ def show_enemies_left():
     return left
 
 
+def auto_spawn():
+    global ENEMIES_LEFT
+    necessary = 1300 * LVL - SCORE
+    if ENEMIES_LEFT <= 5:
+        if necessary > ENEMIES_LEFT * 100:
+            Enemy()
+            ENEMIES_LEFT += 1
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -381,7 +390,6 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group.remove(sprite)
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
-                    SCORE += 100
                     ENEMIES_LEFT -= 1
                 change_enemy_image(sprite)
                 if self in shot_group_player:
@@ -520,18 +528,16 @@ def bot_spawn(new_bot):
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
     new_bot.rect.y = tile_width * y
-    if enemy_group:
-        while pygame.sprite.spritecollideany(new_bot, walls_group) \
-                or pygame.sprite.spritecollideany(new_bot, borders_group) \
-                or pygame.sprite.spritecollideany(new_bot, player_group) \
-                or pygame.sprite.spritecollideany(new_bot, enemy_group) \
-                or pygame.sprite.spritecollideany(new_bot, train_group) \
-                or pygame.sprite.spritecollideany(new_bot, cars_group):
-            x = random.randint(1, 14)
-            y = random.randint(1, 8)
-            new_bot.rect.x = tile_width * x
-            new_bot.rect.y = tile_width * y
-    return x, y
+    while pygame.sprite.spritecollideany(new_bot, walls_group) \
+            or pygame.sprite.spritecollideany(new_bot, borders_group) \
+            or pygame.sprite.spritecollideany(new_bot, player_group) \
+            or pygame.sprite.spritecollideany(new_bot, enemy_group) \
+            or pygame.sprite.spritecollideany(new_bot, train_group) \
+            or pygame.sprite.spritecollideany(new_bot, cars_group):
+        x = random.randint(1, 14)
+        y = random.randint(1, 8)
+        new_bot.rect.x = tile_width * x
+        new_bot.rect.y = tile_width * y
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -728,4 +734,5 @@ while True:
     enemy_group.draw(screen)
     enemy_group.update()
     pygame.display.flip()
+    auto_spawn()
     clock.tick(FPS)
