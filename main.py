@@ -32,21 +32,38 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 
 def show_info():
-    fps = update_fps()
-    level_num = show_lvl()
-    stat = statistics()
-    hp1 = show_hp()[0]
-    hp2 = show_hp()[1]
+    try:
+        fps = update_fps()
+        level_num = show_lvl()
+        stat = statistics()
+        lives = show_lives()
+        hp1 = show_hp()[0]
+        hp2 = show_hp()[1]
 
-    screen.blit(fps, (925 - fps.get_width() // 2, 20))
-    screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
-    screen.blit(stat, (925 - stat.get_width() // 2, 120))
-    if player.health == 100:
-        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
-        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
-    elif player.health == 50:
-        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
-        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 160))
+        screen.blit(fps, (925 - fps.get_width() // 2, 20))
+        screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
+        screen.blit(stat, (925 - stat.get_width() // 2, 120))
+        screen.blit(lives, (925 - lives.get_width() // 2, 160))
+
+        if player.health == 100:
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 200))
+        elif player.health == 50:
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
+        if player.lives == 0:
+            terminate()
+    except Exception:
+        player.lives -= 1
+        player.health = 100
+        delta_x = spawn_position[0] * tile_width - player.rect.x
+        delta_y = spawn_position[1] * tile_width - player.rect.y
+        player.rect = player.rect.move(delta_x, delta_y)
+
+
+def show_lives():
+    lives_text = font.render(f'Жизни: {player.lives}', 1, pygame.Color("white"))
+    return lives_text
 
 
 def show_hp():
@@ -178,7 +195,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
-        self.health = 50
+        self.health = 100
+        self.lives = 2
 
     def change_position(self):
         move = (0, 0)
@@ -246,8 +264,11 @@ class Player(pygame.sprite.Sprite):
 
 player = None
 
+spawn_position = 0, 0
+
 
 def generate_level(level):
+    global spawn_position
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -262,6 +283,7 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
+                spawn_position = x, y
             elif level[y][x] == '!':
                 Tile('relsi', x, y)
             elif level[y][x] == '*':
