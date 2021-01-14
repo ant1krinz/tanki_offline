@@ -27,8 +27,11 @@ FPS = 30
 
 SCORE = 0
 
+ENEMIES_LEFT = 13
+
 LVL = 1
 
+smaller_font = pygame.font.SysFont("Century Gothic", 24)
 font = pygame.font.SysFont("Century Gothic", 30)
 font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
@@ -41,6 +44,7 @@ def show_info():
         lives = show_lives()
         hp1 = show_hp()[0]
         hp2 = show_hp()[1]
+        left = show_enemies_left()
 
         screen.blit(fps, (925 - fps.get_width() // 2, 20))
         screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
@@ -55,6 +59,8 @@ def show_info():
             screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
         if player.lives == 0:
             terminate()
+
+        screen.blit(left, (925 - left.get_width() // 2, 240))
     except Exception:
         player.lives -= 1
         player.health = 100
@@ -95,6 +101,11 @@ def update_fps():
 def statistics():
     stata = font.render(f'Очки: {SCORE}', 1, pygame.Color("white"))
     return stata
+
+
+def show_enemies_left():
+    left = smaller_font.render(f'Врагов осталось: {ENEMIES_LEFT}', 1, pygame.Color("white"))
+    return left
 
 
 def load_image(name, colorkey=None):
@@ -328,7 +339,7 @@ class Shot(pygame.sprite.Sprite):
             self.vx = 0
 
     def update(self, *args):
-        global SCORE
+        global SCORE, ENEMIES_LEFT
         self.rect = self.rect.move(self.vx, self.vy)
 
         if pygame.sprite.spritecollide(self, borders_group, False):
@@ -347,6 +358,7 @@ class Shot(pygame.sprite.Sprite):
                     all_sprites.remove(sprite)
                     enemy_group2.remove(sprite)
                     SCORE += 100
+                    ENEMIES_LEFT -= 1
                 change_enemy_image(sprite)
                 if self in shot_group_player:
                     shot_group_player.remove(self)
@@ -362,6 +374,7 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
                     SCORE += 100
+                    ENEMIES_LEFT -= 1
                 change_enemy_image(sprite)
                 if self in shot_group_player:
                     shot_group_player.remove(self)
@@ -372,7 +385,6 @@ class Shot(pygame.sprite.Sprite):
                 if self in shot_group_player:
                     shot_group_player.remove(self)
             enemy_group2.add(self.parent)
-
 
         if pygame.sprite.spritecollideany(self, cars_group):
             pygame.sprite.spritecollideany(self, cars_group).health -= 25
@@ -468,25 +480,31 @@ level()
 
 
 def update_level():
-    global SCORE, LVL, player, level_x, level_y
-    if SCORE == 1000 and LVL == 1:
-        all_sprites.empty()
-        shot_group.empty()
-        shot_group_player.empty()
-        walls_group.empty()
-        player_group.empty()
-        borders_group.empty()
-        tiles_group.empty()
-        enemy_group.empty()
-        enemy_group2.empty()
-        bushes_group.empty()
-        train_group.empty()
-        cars_group.empty()
+    global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    if SCORE == 1300 and LVL == 1:
+        clear_groups()
+        ENEMIES_LEFT = 13
+
         player, level_x, level_y = generate_level(load_level("level2.txt"))
-        for _ in range(10):
+        for _ in range(13):
             Enemy()
         LVL = 2
         level()
+
+
+def clear_groups():
+    all_sprites.empty()
+    shot_group.empty()
+    shot_group_player.empty()
+    walls_group.empty()
+    player_group.empty()
+    borders_group.empty()
+    tiles_group.empty()
+    enemy_group.empty()
+    enemy_group2.empty()
+    bushes_group.empty()
+    train_group.empty()
+    cars_group.empty()
 
 
 def bot_spawn(new_bot):
@@ -677,7 +695,7 @@ def change_enemy_image(enemy):
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(15):
+for _ in range(13):
     Enemy()
 
 while True:
