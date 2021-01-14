@@ -334,6 +334,8 @@ class Shot(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         if self.parent == player:
             for sprite in pygame.sprite.spritecollide(self, enemy_group, False):
@@ -346,6 +348,8 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group2.remove(sprite)
                     SCORE += 100
                 change_enemy_image(sprite)
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
 
         else:
             enemy_group2.remove(self.parent)
@@ -357,12 +361,18 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group.remove(sprite)
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
+                    SCORE += 100
+                change_enemy_image(sprite)
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
                 shot_group.remove(self)
                 all_sprites.remove(self)
-                
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
             enemy_group2.add(self.parent)
+
 
         if pygame.sprite.spritecollideany(self, cars_group):
             pygame.sprite.spritecollideany(self, cars_group).health -= 25
@@ -383,6 +393,8 @@ class Shot(pygame.sprite.Sprite):
 
             all_sprites.remove(self)
             shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         if pygame.sprite.spritecollideany(self, walls_group):
             pygame.sprite.spritecollideany(self, walls_group).health -= 25
@@ -403,6 +415,8 @@ class Shot(pygame.sprite.Sprite):
 
             all_sprites.remove(self)
             shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         if pygame.sprite.spritecollideany(self, train_group):
             pygame.sprite.spritecollideany(self, train_group).health -= 25
@@ -423,8 +437,8 @@ class Shot(pygame.sprite.Sprite):
 
             all_sprites.remove(self)
             shot_group.remove(self)
-        if self in shot_group_player:
-            shot_group_player.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
 
 def level():
@@ -458,11 +472,13 @@ def update_level():
     if SCORE == 1000 and LVL == 1:
         all_sprites.empty()
         shot_group.empty()
+        shot_group_player.empty()
         walls_group.empty()
         player_group.empty()
         borders_group.empty()
         tiles_group.empty()
         enemy_group.empty()
+        enemy_group2.empty()
         bushes_group.empty()
         train_group.empty()
         cars_group.empty()
@@ -630,7 +646,7 @@ class Enemy(pygame.sprite.Sprite):
                             self.image = pygame.transform.rotate(self.image, 180)
                             self.distinction = 's'
                 enemy_group2.add(self)
-            res3 = random.randint(1, 50)
+            res3 = random.randint(1, 100)
             if res3 == 1:
                 Shot(self.rect.x, self.rect.y, self)
 
@@ -659,10 +675,9 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(low_broke_tank_image, 90)
 
 
-
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(1):
+for _ in range(15):
     Enemy()
 
 while True:
@@ -670,7 +685,7 @@ while True:
         if event.type == pygame.QUIT:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if len(shot_group_player) < 3:
+            if len(shot_group_player) < 1:
                 shot = Shot(player.rect.x, player.rect.y, player)
 
     update_level()
