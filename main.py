@@ -361,6 +361,7 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group.remove(sprite)
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
+                    SCORE += 100
                 change_enemy_image(sprite)
                 if self in shot_group_player:
                     shot_group_player.remove(self)
