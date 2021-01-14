@@ -3,6 +3,7 @@ import sys
 import os
 import random
 import time
+import math
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -16,6 +17,7 @@ walls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
+shot_group_player = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
@@ -155,15 +157,21 @@ tile_images = {
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
 hard_broke_box_image = load_image('hard_broke_box.png')
+
 low_broke_train_image = pygame.transform.rotate(load_image('low_broke_train.png'), 90)
 medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_train.png'), 90)
 hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_train.png'), 90)
+
 low_broke_car_image = pygame.transform.rotate(load_image('low_broke_car.png'), 90)
 medium_broke_car_image = pygame.transform.rotate(load_image('medium_broke_car.png'), 90)
 hard_broke_car_image = pygame.transform.rotate(load_image('hard_broke_car.png'), 90)
+
 player_image = load_image('main_tank2.png')
 shot_image = load_image('ammo3.png')
+
 enemy_image = load_image('enemy_tank1.png')
+low_broke_tank_image = load_image('low_broke_tank.png')
+medium_broke_tank_image = load_image('medium_broke_tank.png')
 
 tile_width = tile_height = 50
 
@@ -300,6 +308,9 @@ class Shot(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(pos_x + 15, pos_y + 15)
         self.parent = parent
 
+        if self.parent == player:
+            shot_group_player.add(self)
+
         if self.parent.distinction == "w":
             self.vy = -10
             self.vx = 0
@@ -319,9 +330,6 @@ class Shot(pygame.sprite.Sprite):
     def update(self, *args):
         global SCORE
         self.rect = self.rect.move(self.vx, self.vy)
-        if pygame.sprite.spritecollide(self, walls_group, False):
-            all_sprites.remove(self)
-            shot_group.remove(self)
 
         if pygame.sprite.spritecollide(self, borders_group, False):
             all_sprites.remove(self)
@@ -335,7 +343,10 @@ class Shot(pygame.sprite.Sprite):
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
                     all_sprites.remove(sprite)
+                    enemy_group2.remove(sprite)
                     SCORE += 100
+                change_enemy_image(sprite)
+
         else:
             enemy_group2.remove(self.parent)
             for sprite in pygame.sprite.spritecollide(self, enemy_group2, False):
@@ -344,12 +355,13 @@ class Shot(pygame.sprite.Sprite):
                 sprite.health -= 20
                 if sprite.health == 0:
                     enemy_group.remove(sprite)
+                    enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
                 shot_group.remove(self)
                 all_sprites.remove(self)
-
+                
             enemy_group2.add(self.parent)
 
         if pygame.sprite.spritecollideany(self, cars_group):
@@ -367,6 +379,8 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, cars_group).health == 0:
                 pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
                 cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, cars_group))
+
             all_sprites.remove(self)
             shot_group.remove(self)
 
@@ -385,6 +399,10 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, walls_group).health == 0:
                 pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
                 walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
 
         if pygame.sprite.spritecollideany(self, train_group):
             pygame.sprite.spritecollideany(self, train_group).health -= 25
@@ -401,8 +419,12 @@ class Shot(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, train_group).health == 0:
                 pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
                 train_group.remove(pygame.sprite.spritecollideany(self, train_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, train_group))
+
             all_sprites.remove(self)
             shot_group.remove(self)
+        if self in shot_group_player:
+            shot_group_player.remove(self)
 
 
 def level():
@@ -479,140 +501,168 @@ class Enemy(pygame.sprite.Sprite):
         self.distinction = 's'
         bot_spawn(self)
         self.health = 60
+        self.follow = False
         enemy_group.add(self)
         enemy_group2.add(self)
 
     def update(self):
-        if self.distinction == 's':
-            enemy_group2.remove(self)
-            delta = (0, tile_width / 15)
-            self.rect = self.rect.move(delta)
-            if pygame.sprite.spritecollide(self, borders_group, False) or \
-                    pygame.sprite.spritecollideany(self, walls_group) or \
-                    pygame.sprite.spritecollideany(self, enemy_group2) or \
-                    pygame.sprite.spritecollideany(self, player_group) or \
-                    pygame.sprite.spritecollideany(self, train_group) or \
-                    pygame.sprite.spritecollideany(self, cars_group):
-                self.rect = self.rect.move(-delta[0], -delta[1])
-                if self.distinction == "w":
-                    self.image = pygame.transform.rotate(self.image, 90)
-                elif self.distinction == "s":
-                    self.image = pygame.transform.rotate(self.image, 270)
-                elif self.distinction == "a":
-                    pass
-                elif self.distinction == "d":
-                    self.image = pygame.transform.rotate(self.image, 180)
-                self.distinction = "a"
-                res1 = random.randint(1, 2)
-                if res1 == 2:
-                    res2 = random.randint(1, 2)
-                    if res2 == 1:
+        distance = math.sqrt((player.rect.x - self.rect.x) ** 2 + (player.rect.y - self.rect.y) ** 2)
+        if not self.follow:
+            if self.distinction == 's':
+                enemy_group2.remove(self)
+                delta = (0, tile_width / 15)
+                self.rect = self.rect.move(delta)
+                if pygame.sprite.spritecollide(self, borders_group, False) or \
+                        pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, enemy_group2) or \
+                        pygame.sprite.spritecollideany(self, player_group) or \
+                        pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group):
+                    self.rect = self.rect.move(-delta[0], -delta[1])
+                    if self.distinction == "w":
+                        self.image = pygame.transform.rotate(self.image, 90)
+                    elif self.distinction == "s":
                         self.image = pygame.transform.rotate(self.image, 270)
-                        self.distinction = 'w'
-                    elif res2 == 2:
+                    elif self.distinction == "a":
+                        pass
+                    elif self.distinction == "d":
                         self.image = pygame.transform.rotate(self.image, 180)
-                        self.distinction = 'd'
-            enemy_group2.add(self)
-        elif self.distinction == 'a':
-            delta = (-tile_width / 15, 0)
-            enemy_group2.remove(self)
-            self.rect = self.rect.move(delta)
-            if pygame.sprite.spritecollideany(self, borders_group) or \
-                    pygame.sprite.spritecollideany(self, walls_group) or \
-                    pygame.sprite.spritecollideany(self, enemy_group2) or \
-                    pygame.sprite.spritecollideany(self, player_group) or \
-                    pygame.sprite.spritecollideany(self, train_group) or \
-                    pygame.sprite.spritecollideany(self, cars_group):
-                self.rect = self.rect.move(-delta[0], -delta[1])
-                if self.distinction == "w":
-                    self.image = pygame.transform.rotate(self.image, 270)
-                elif self.distinction == "s":
-                    self.image = pygame.transform.rotate(self.image, 90)
-                elif self.distinction == "a":
-                    self.image = pygame.transform.rotate(self.image, 180)
-                elif self.distinction == "d":
-                    pass
-                self.distinction = "d"
-                res1 = random.randint(1, 2)
-                if res1 == 2:
-                    res2 = random.randint(1, 2)
-                    if res2 == 1:
-                        self.image = pygame.transform.rotate(self.image, 90)
-                        self.distinction = 'w'
-                    elif res2 == 2:
+                    self.distinction = "a"
+                    res1 = random.randint(1, 2)
+                    if res1 == 2:
+                        res2 = random.randint(1, 2)
+                        if res2 == 1:
+                            self.image = pygame.transform.rotate(self.image, 270)
+                            self.distinction = 'w'
+                        elif res2 == 2:
+                            self.image = pygame.transform.rotate(self.image, 180)
+                            self.distinction = 'd'
+                enemy_group2.add(self)
+            elif self.distinction == 'a':
+                delta = (-tile_width / 15, 0)
+                enemy_group2.remove(self)
+                self.rect = self.rect.move(delta)
+                if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, enemy_group2) or \
+                        pygame.sprite.spritecollideany(self, player_group) or \
+                        pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group):
+                    self.rect = self.rect.move(-delta[0], -delta[1])
+                    if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 270)
-                        self.distinction = 's'
-            enemy_group2.add(self)
-
-        elif self.distinction == 'w':
-            delta = (0, -tile_width / 15)
-            enemy_group2.remove(self)
-            self.rect = self.rect.move(delta)
-            if pygame.sprite.spritecollideany(self, borders_group) or \
-                    pygame.sprite.spritecollideany(self, walls_group) or \
-                    pygame.sprite.spritecollideany(self, enemy_group2) or \
-                    pygame.sprite.spritecollideany(self, player_group) or \
-                    pygame.sprite.spritecollideany(self, train_group) or \
-                    pygame.sprite.spritecollideany(self, cars_group):
-                self.rect = self.rect.move(-delta[0], -delta[1])
-                if self.distinction == "w":
-                    self.image = pygame.transform.rotate(self.image, 180)
-                elif self.distinction == "s":
-                    pass
-                elif self.distinction == "a":
-                    self.image = pygame.transform.rotate(self.image, 90)
-                elif self.distinction == "d":
-                    self.image = pygame.transform.rotate(self.image, 270)
-                self.distinction = "s"
-                res1 = random.randint(1, 2)
-                if res1 == 2:
-                    res2 = random.randint(1, 2)
-                    if res2 == 1:
+                    elif self.distinction == "s":
                         self.image = pygame.transform.rotate(self.image, 90)
-                        self.distinction = 'd'
-                    elif res2 == 2:
-                        self.image = pygame.transform.rotate(self.image, 270)
-                        self.distinction = 'a'
-            enemy_group2.add(self)
-
-        elif self.distinction == 'd':
-            delta = (tile_width / 15, 0)
-            self.rect = self.rect.move(delta)
-            enemy_group2.remove(self)
-            if pygame.sprite.spritecollideany(self, borders_group) or \
-                    pygame.sprite.spritecollideany(self, walls_group) or \
-                    pygame.sprite.spritecollideany(self, enemy_group2) or \
-                    pygame.sprite.spritecollideany(self, player_group) or \
-                    pygame.sprite.spritecollideany(self, train_group) or \
-                    pygame.sprite.spritecollideany(self, cars_group):
-                self.rect = self.rect.move(-delta[0], -delta[1])
-                if self.distinction == "w":
-                    pass
-                elif self.distinction == "s":
-                    self.image = pygame.transform.rotate(self.image, 180)
-                elif self.distinction == "a":
-                    self.image = pygame.transform.rotate(self.image, 270)
-                elif self.distinction == "d":
-                    self.image = pygame.transform.rotate(self.image, 90)
-                self.distinction = "w"
-                res1 = random.randint(1, 2)
-                if res1 == 2:
-                    res2 = random.randint(1, 2)
-                    if res2 == 1:
-                        self.image = pygame.transform.rotate(self.image, 90)
-                        self.distinction = 'a'
-                    elif res2 == 2:
+                    elif self.distinction == "a":
                         self.image = pygame.transform.rotate(self.image, 180)
-                        self.distinction = 's'
-            enemy_group2.add(self)
-        res3 = random.randint(1, 100)
-        if res3 == 1:
-            Shot(self.rect.x, self.rect.y, self)
+                    elif self.distinction == "d":
+                        pass
+                    self.distinction = "d"
+                    res1 = random.randint(1, 2)
+                    if res1 == 2:
+                        res2 = random.randint(1, 2)
+                        if res2 == 1:
+                            self.image = pygame.transform.rotate(self.image, 90)
+                            self.distinction = 'w'
+                        elif res2 == 2:
+                            self.image = pygame.transform.rotate(self.image, 270)
+                            self.distinction = 's'
+                enemy_group2.add(self)
+
+            elif self.distinction == 'w':
+                delta = (0, -tile_width / 15)
+                enemy_group2.remove(self)
+                self.rect = self.rect.move(delta)
+                if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, enemy_group2) or \
+                        pygame.sprite.spritecollideany(self, player_group) or \
+                        pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group):
+                    self.rect = self.rect.move(-delta[0], -delta[1])
+                    if self.distinction == "w":
+                        self.image = pygame.transform.rotate(self.image, 180)
+                    elif self.distinction == "s":
+                        pass
+                    elif self.distinction == "a":
+                        self.image = pygame.transform.rotate(self.image, 90)
+                    elif self.distinction == "d":
+                        self.image = pygame.transform.rotate(self.image, 270)
+                    self.distinction = "s"
+                    res1 = random.randint(1, 2)
+                    if res1 == 2:
+                        res2 = random.randint(1, 2)
+                        if res2 == 1:
+                            self.image = pygame.transform.rotate(self.image, 90)
+                            self.distinction = 'd'
+                        elif res2 == 2:
+                            self.image = pygame.transform.rotate(self.image, 270)
+                            self.distinction = 'a'
+                enemy_group2.add(self)
+
+            elif self.distinction == 'd':
+                delta = (tile_width / 15, 0)
+                self.rect = self.rect.move(delta)
+                enemy_group2.remove(self)
+                if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, enemy_group2) or \
+                        pygame.sprite.spritecollideany(self, player_group) or \
+                        pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group):
+                    self.rect = self.rect.move(-delta[0], -delta[1])
+                    if self.distinction == "w":
+                        pass
+                    elif self.distinction == "s":
+                        self.image = pygame.transform.rotate(self.image, 180)
+                    elif self.distinction == "a":
+                        self.image = pygame.transform.rotate(self.image, 270)
+                    elif self.distinction == "d":
+                        self.image = pygame.transform.rotate(self.image, 90)
+                    self.distinction = "w"
+                    res1 = random.randint(1, 2)
+                    if res1 == 2:
+                        res2 = random.randint(1, 2)
+                        if res2 == 1:
+                            self.image = pygame.transform.rotate(self.image, 90)
+                            self.distinction = 'a'
+                        elif res2 == 2:
+                            self.image = pygame.transform.rotate(self.image, 180)
+                            self.distinction = 's'
+                enemy_group2.add(self)
+            res3 = random.randint(1, 50)
+            if res3 == 1:
+                Shot(self.rect.x, self.rect.y, self)
+
+
+def change_enemy_image(enemy):
+    hp = enemy.health
+    dist = enemy.distinction
+    if hp == 40:
+        if dist == 'w':
+            enemy.image = pygame.transform.rotate(low_broke_tank_image, 180)
+        elif dist == 's':
+            enemy.image = low_broke_tank_image
+        elif dist == 'a':
+            enemy.image = pygame.transform.rotate(low_broke_tank_image, 270)
+        elif dist == 'd':
+            enemy.image = pygame.transform.rotate(low_broke_tank_image, 90)
+
+    elif hp == 20:
+        if dist == 'w':
+            enemy.image = pygame.transform.rotate(medium_broke_tank_image, 180)
+        elif dist == 's':
+            enemy.image = low_broke_tank_image
+        elif dist == 'a':
+            enemy.image = pygame.transform.rotate(medium_broke_tank_image, 270)
+        elif dist == 'd':
+            enemy.image = pygame.transform.rotate(low_broke_tank_image, 90)
+
 
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(10):
+for _ in range(1):
     Enemy()
 
 while True:
@@ -620,8 +670,9 @@ while True:
         if event.type == pygame.QUIT:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if len(shot_group) < 3:
+            if len(shot_group_player) < 3:
                 shot = Shot(player.rect.x, player.rect.y, player)
+
     update_level()
     start_time = time.time()
     player.change_position()
