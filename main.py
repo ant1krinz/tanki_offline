@@ -61,12 +61,9 @@ def show_info():
             terminate()
 
         screen.blit(left, (925 - left.get_width() // 2, 240))
-    except Exception:
-        player.lives -= 1
-        player.health = 100
-        delta_x = spawn_position[0] * tile_width - player.rect.x
-        delta_y = spawn_position[1] * tile_width - player.rect.y
-        player.rect = player.rect.move(delta_x, delta_y)
+
+    except TypeError:
+        respawn()
 
 
 def show_lives():
@@ -128,6 +125,14 @@ def load_image(name, colorkey=None):
 def terminate():
     pygame.quit()
     sys.exit()
+
+
+def respawn():
+    player.lives -= 1
+    player.health = 100
+    delta_x = spawn_position[0] * tile_width - player.rect.x
+    delta_y = spawn_position[1] * tile_width - player.rect.y
+    player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
