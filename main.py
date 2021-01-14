@@ -114,8 +114,6 @@ def auto_spawn():
             ENEMIES_LEFT += 1
 
 
-
-
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -527,18 +525,16 @@ def bot_spawn(new_bot):
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
     new_bot.rect.y = tile_width * y
-    if enemy_group:
-        while pygame.sprite.spritecollideany(new_bot, walls_group) \
-                or pygame.sprite.spritecollideany(new_bot, borders_group) \
-                or pygame.sprite.spritecollideany(new_bot, player_group) \
-                or pygame.sprite.spritecollideany(new_bot, enemy_group) \
-                or pygame.sprite.spritecollideany(new_bot, train_group) \
-                or pygame.sprite.spritecollideany(new_bot, cars_group):
-            x = random.randint(1, 14)
-            y = random.randint(1, 8)
-            new_bot.rect.x = tile_width * x
-            new_bot.rect.y = tile_width * y
-    return x, y
+    while pygame.sprite.spritecollideany(new_bot, walls_group) \
+            or pygame.sprite.spritecollideany(new_bot, borders_group) \
+            or pygame.sprite.spritecollideany(new_bot, player_group) \
+            or pygame.sprite.spritecollideany(new_bot, enemy_group) \
+            or pygame.sprite.spritecollideany(new_bot, train_group) \
+            or pygame.sprite.spritecollideany(new_bot, cars_group):
+        x = random.randint(1, 14)
+        y = random.randint(1, 8)
+        new_bot.rect.x = tile_width * x
+        new_bot.rect.y = tile_width * y
 
 
 class Enemy(pygame.sprite.Sprite):
