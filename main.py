@@ -674,7 +674,7 @@ def change_enemy_image(enemy):
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(13):
+for _ in range(15):
     Enemy()
 
 while True:
@@ -682,7 +682,7 @@ while True:
         if event.type == pygame.QUIT:
             terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if len(shot_group_player) < 3:
+            if len(shot_group_player) < 1:
                 shot = Shot(player.rect.x, player.rect.y, player)
 
     update_level()
