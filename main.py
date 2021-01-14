@@ -472,11 +472,13 @@ def update_level():
     if SCORE == 1000 and LVL == 1:
         all_sprites.empty()
         shot_group.empty()
+        shot_group_player.empty()
         walls_group.empty()
         player_group.empty()
         borders_group.empty()
         tiles_group.empty()
         enemy_group.empty()
+        enemy_group2.empty()
         bushes_group.empty()
         train_group.empty()
         cars_group.empty()
