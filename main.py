@@ -29,18 +29,66 @@ SCORE = 0
 
 LVL = 1
 
-font = pygame.font.SysFont("Arial", 30)
+font = pygame.font.SysFont("Century Gothic", 30)
+font_for_fps = pygame.font.SysFont('Century Gothic', 40)
+
+
+def show_info():
+    try:
+        fps = update_fps()
+        level_num = show_lvl()
+        stat = statistics()
+        lives = show_lives()
+        hp1 = show_hp()[0]
+        hp2 = show_hp()[1]
+
+        screen.blit(fps, (925 - fps.get_width() // 2, 20))
+        screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
+        screen.blit(stat, (925 - stat.get_width() // 2, 120))
+        screen.blit(lives, (925 - lives.get_width() // 2, 160))
+
+        if player.health == 100:
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 200))
+        elif player.health == 50:
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
+        if player.lives == 0:
+            terminate()
+    except Exception:
+        player.lives -= 1
+        player.health = 100
+        delta_x = spawn_position[0] * tile_width - player.rect.x
+        delta_y = spawn_position[1] * tile_width - player.rect.y
+        player.rect = player.rect.move(delta_x, delta_y)
+
+
+def show_lives():
+    lives_text = font.render(f'Жизни: {player.lives}', 1, pygame.Color("white"))
+    return lives_text
+
+
+def show_hp():
+    hp_text1 = font.render(f'Здоровье: ', 1, pygame.Color("white"))
+    hp_text2_red = font.render(f'{player.health}', 1, pygame.Color("#F55A46"))
+    hp_text2_green = font.render(f'{player.health}', 1, pygame.Color("#2CE66D"))
+
+    if player.health == 100:
+        return (hp_text1, hp_text2_green)
+
+    if player.health == 50:
+        return (hp_text1, hp_text2_red)
 
 
 def show_lvl():
     global LVL
-    lvl_text = font.render(f'Уровень {LVL}', 1, pygame.Color("white"))
+    lvl_text = font.render(f'Уровень: {LVL}', 1, pygame.Color("white"))
     return lvl_text
 
 
 def update_fps():
     fps = str(int(clock.get_fps()))
-    fps_text = font.render(f'FPS: {fps}', 1, pygame.Color("white"))
+    fps_text = font_for_fps.render(f'FPS: {fps}', 1, pygame.Color("white"))
     return fps_text
 
 
@@ -155,6 +203,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
+        self.health = 100
+        self.lives = 2
 
     def change_position(self):
         move = (0, 0)
@@ -222,8 +272,11 @@ class Player(pygame.sprite.Sprite):
 
 player = None
 
+spawn_position = 0, 0
+
 
 def generate_level(level):
+    global spawn_position
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -238,6 +291,7 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
+                spawn_position = x, y
             elif level[y][x] == '!':
                 Tile('relsi', x, y)
             elif level[y][x] == '*':
@@ -303,7 +357,11 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group.remove(sprite)
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
-                change_enemy_image(sprite)
+            if pygame.sprite.spritecollideany(self, player_group):
+                player.health -= 50
+                shot_group.remove(self)
+                all_sprites.remove(self)
+                
             enemy_group2.add(self.parent)
 
         if pygame.sprite.spritecollideany(self, cars_group):
@@ -365,7 +423,6 @@ class Shot(pygame.sprite.Sprite):
 
             all_sprites.remove(self)
             shot_group.remove(self)
-
         if self in shot_group_player:
             shot_group_player.remove(self)
 
@@ -602,6 +659,7 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(low_broke_tank_image, 90)
 
 
+
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
 for _ in range(1):
@@ -620,11 +678,9 @@ while True:
     player.change_position()
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
+    show_info()
     player_group.draw(screen)
     shot_group.draw(screen)
-    screen.blit(update_fps(), (880, 20))
-    screen.blit(show_lvl(), (880, 60))
-    screen.blit(statistics(), (880, 100))
     shot_group.update()
     walls_group.update()
     train_group.update()
