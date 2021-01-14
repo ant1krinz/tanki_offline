@@ -41,8 +41,12 @@ def show_info():
     screen.blit(fps, (925 - fps.get_width() // 2, 20))
     screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
     screen.blit(stat, (925 - stat.get_width() // 2, 120))
-    screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
-    screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
+    if player.health == 100:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 160))
+    else:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 160))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4, 160))
 
 
 def show_hp():
@@ -307,6 +311,7 @@ class Shot(pygame.sprite.Sprite):
                 shot_group.remove(self)
                 sprite.health -= 20
                 if sprite.health == 0:
+                    SCORE += 100
                     enemy_group.remove(sprite)
                     all_sprites.remove(sprite)
                     SCORE += 100
