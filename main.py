@@ -40,7 +40,8 @@ def show_info():
     try:
         fps = update_fps()
         level_num = show_lvl()
-        stat = statistics()
+        score_text = statistics()[0]
+        score_amount = statistics()[1]
         lives = show_lives()
         hp1 = show_hp()[0]
         hp2 = show_hp()[1]
@@ -48,7 +49,8 @@ def show_info():
 
         screen.blit(fps, (925 - fps.get_width() // 2, 20))
         screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
-        screen.blit(stat, (925 - stat.get_width() // 2, 120))
+        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 120))
+        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 120))
         screen.blit(lives, (925 - lives.get_width() // 2, 160))
 
         if player.health == 100:
@@ -96,8 +98,9 @@ def update_fps():
 
 
 def statistics():
-    stata = font.render(f'Очки: {SCORE}', 1, pygame.Color("white"))
-    return stata
+    score1 = font.render(f'Очки: ', 1, pygame.Color("white"))
+    score2 = font.render(f'{SCORE}', 1, pygame.Color("#FBEE73"))
+    return (score1, score2)
 
 
 def show_enemies_left():
