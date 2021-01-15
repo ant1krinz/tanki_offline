@@ -4,6 +4,7 @@ import os
 import random
 import time
 import math
+import pygame_gui
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -23,9 +24,11 @@ enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
 
-FPS = 30
+FPS = 31
 
 SCORE = 0
+
+NAME = ''
 
 ENEMIES_LEFT = 13
 
@@ -150,6 +153,7 @@ def respawn():
 def start_screen():
     fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -162,6 +166,146 @@ def start_screen():
 
 
 start_screen()
+
+
+def level():
+    global playing
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 50)
+    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height()
+    font2 = pygame.font.Font(None, 40)
+    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
+    text_x2 = WIDTH // 4 - text.get_width() // 4
+    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
+    screen.blit(text, (text_x, text_y))
+    screen.blit(second_text, (text_x2, text_y2))
+    playing = True
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def nickname_window():
+    global WIDTH, HEIGHT, NAME
+    fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+    text1 = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6.7), (200, 40)),
+        text='Введите имя', manager=manager)
+
+    entry_name = pygame_gui.elements.UITextEntryLine(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 5.5), (200, 60)),
+        manager=manager
+    )
+
+    play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 4), (200, 40)),
+        text='В бой!',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+                    NAME = event.text
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == play:
+                        return
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.flip()
+
+
+def main_menu():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+    start_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6), (200, 60)),
+        text='Начать игру',
+        manager=manager
+    )
+
+    continue_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3), (200, 60)),
+        text='Продолжить игру',
+        manager=manager
+    )
+
+    settings = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 60)),
+        text='Настройки',
+        manager=manager
+    )
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * -3), (200, 60)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == start_play:
+                        nickname_window()
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == continue_play:
+                        nickname_window()
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == settings:
+                        pass
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.flip()
+
+
+main_menu()
 
 
 def load_level(filename):
@@ -226,6 +370,7 @@ class Tile(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
+        global NAME
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.rect = self.image.get_rect().move(
@@ -233,6 +378,7 @@ class Player(pygame.sprite.Sprite):
         self.distinction = "w"
         self.health = 100
         self.lives = 2
+        self.name = NAME
 
     def change_position(self):
         move = (0, 0)
@@ -469,32 +615,6 @@ class Shot(pygame.sprite.Sprite):
                 shot_group_player.remove(self)
 
 
-def level():
-    screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 50)
-    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
-    text_x = WIDTH // 2 - text.get_width() // 2
-    text_y = HEIGHT // 2 - text.get_height()
-    font2 = pygame.font.Font(None, 40)
-    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
-    text_x2 = WIDTH // 4 - text.get_width() // 4
-    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
-    screen.blit(text, (text_x, text_y))
-    screen.blit(second_text, (text_x2, text_y2))
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return
-        pygame.display.flip()
-        clock.tick(FPS)
-
-
-level()
-
-
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     if SCORE == 1300 and LVL == 1:
@@ -711,6 +831,8 @@ player, level_x, level_y = generate_level(load_level("level1.txt"))
 
 for _ in range(13):
     Enemy()
+
+pygame.display.set_caption('Tanki Offline')
 
 while True:
     for event in pygame.event.get():
