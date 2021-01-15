@@ -378,8 +378,8 @@ class Shot(pygame.sprite.Sprite):
                     ENEMIES_LEFT -= 1
                 else:
                     change_enemy_image(sprite)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
 
         else:
             enemy_group2.remove(self.parent)
