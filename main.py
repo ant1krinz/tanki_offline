@@ -14,6 +14,7 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
+skulls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
@@ -176,6 +177,7 @@ tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
+    'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
     'train': pygame.transform.rotate(load_image('train.png'), 90),
@@ -220,6 +222,8 @@ class Tile(pygame.sprite.Sprite):
             train_group.add(self)
         if tile_type == 'car':
             cars_group.add(self)
+        if tile_type == 'skull':
+            skulls_group.add(self)
         self.health = 100
         self.type = tile_type
 
@@ -296,6 +300,9 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, cars_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, skulls_group):
+            self.rect = self.rect.move(-move[0], -move[1])
+
 
 
 player = None
@@ -326,6 +333,8 @@ def generate_level(level):
                 Tile('train', x, y)
             elif level[y][x] == '$':
                 Tile('car', x, y)
+            elif level[y][x] == '&':
+                Tile('skull', x, y)
     return new_player, x, y
 
 
@@ -466,6 +475,19 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
+        if pygame.sprite.spritecollideany(self, skulls_group):
+            pygame.sprite.spritecollideany(self, skulls_group).health -= 25
+
+            if pygame.sprite.spritecollideany(self, skulls_group).health == 0:
+                pygame.sprite.spritecollideany(self, skulls_group).image = tile_images['empty']
+                skulls_group.remove(pygame.sprite.spritecollideany(self, skulls_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, skulls_group))
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
 
 def level():
     screen.fill((0, 0, 0))
@@ -518,6 +540,7 @@ def clear_groups():
     enemy_group2.empty()
     bushes_group.empty()
     train_group.empty()
+    skulls_group.empty()
     cars_group.empty()
 
 
@@ -531,6 +554,7 @@ def bot_spawn(new_bot):
             or pygame.sprite.spritecollideany(new_bot, player_group) \
             or pygame.sprite.spritecollideany(new_bot, enemy_group) \
             or pygame.sprite.spritecollideany(new_bot, train_group) \
+            or pygame.sprite.spritecollideany(new_bot, skulls_group) \
             or pygame.sprite.spritecollideany(new_bot, cars_group):
         x = random.randint(1, 14)
         y = random.randint(1, 8)
@@ -563,6 +587,7 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
                         pygame.sprite.spritecollideany(self, cars_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
@@ -593,6 +618,7 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
                         pygame.sprite.spritecollideany(self, cars_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
@@ -624,6 +650,7 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
                         pygame.sprite.spritecollideany(self, cars_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
@@ -655,6 +682,7 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
                         pygame.sprite.spritecollideany(self, cars_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
@@ -729,6 +757,7 @@ while True:
     shot_group.update()
     walls_group.update()
     train_group.update()
+    skulls_group.update()
     enemy_group.draw(screen)
     enemy_group.update()
     pygame.display.flip()
