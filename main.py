@@ -501,7 +501,7 @@ class Shot(pygame.sprite.Sprite):
             self.vy = 10
             self.vx = 0
 
-    def update(self, *args):
+    def update(self):
         global SCORE, ENEMIES_LEFT
         self.rect = self.rect.move(self.vx, self.vy)
 
@@ -522,9 +522,10 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group2.remove(sprite)
                     SCORE += 100
                     ENEMIES_LEFT -= 1
-                change_enemy_image(sprite)
-                if self in shot_group_player:
-                    shot_group_player.remove(self)
+                else:
+                    change_enemy_image(sprite)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         else:
             enemy_group2.remove(self.parent)
@@ -537,15 +538,12 @@ class Shot(pygame.sprite.Sprite):
                     enemy_group2.remove(sprite)
                     all_sprites.remove(sprite)
                     ENEMIES_LEFT -= 1
-                change_enemy_image(sprite)
-                if self in shot_group_player:
-                    shot_group_player.remove(self)
+                else:
+                    change_enemy_image(sprite)
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
                 shot_group.remove(self)
                 all_sprites.remove(self)
-                if self in shot_group_player:
-                    shot_group_player.remove(self)
             enemy_group2.add(self.parent)
 
         if pygame.sprite.spritecollideany(self, cars_group):
@@ -820,11 +818,11 @@ def change_enemy_image(enemy):
         if dist == 'w':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 180)
         elif dist == 's':
-            enemy.image = low_broke_tank_image
+            enemy.image = medium_broke_tank_image
         elif dist == 'a':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 270)
         elif dist == 'd':
-            enemy.image = pygame.transform.rotate(low_broke_tank_image, 90)
+            enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
