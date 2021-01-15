@@ -224,6 +224,7 @@ class Tile(pygame.sprite.Sprite):
             cars_group.add(self)
         if tile_type == 'skull':
             skulls_group.add(self)
+            self.distinction = 'w'
         self.health = 100
         self.type = tile_type
 
@@ -302,7 +303,6 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, skulls_group):
             self.rect = self.rect.move(-move[0], -move[1])
-
 
 
 player = None
@@ -475,13 +475,28 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        if pygame.sprite.spritecollideany(self, skulls_group):
-            pygame.sprite.spritecollideany(self, skulls_group).health -= 25
+        skull = pygame.sprite.spritecollideany(self, skulls_group)
 
-            if pygame.sprite.spritecollideany(self, skulls_group).health == 0:
-                pygame.sprite.spritecollideany(self, skulls_group).image = tile_images['empty']
-                skulls_group.remove(pygame.sprite.spritecollideany(self, skulls_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, skulls_group))
+        if skull:
+            skull.health -= 25
+
+            if skull.health == 0:
+                skull.image = tile_images['empty']
+                skulls_group.remove(skull)
+                all_sprites.remove(skull)
+                distinctions = ["w", "a", "s", "d"]
+
+                for i in range(1, 4):
+                    Shot(skull.rect.x, skull.rect.y, skull)
+                    skull.distinction = distinctions[i]
+                Shot(skull.rect.x, skull.rect.y, skull)
+
+                skull.distinction = 'w'
+
+                for i in range(1, 4):
+                    Shot(skull.rect.x, skull.rect.y, skull)
+                    skull.distinction = distinctions[i]
+                Shot(skull.rect.x, skull.rect.y, skull)
 
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -735,7 +750,7 @@ def change_enemy_image(enemy):
 
 player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(13):
+for _ in range(0):
     Enemy()
 
 while True:
