@@ -216,6 +216,12 @@ def nickname_window():
         manager=manager
     )
 
+    back = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 2.5), (200, 40)),
+        text='Назад',
+        manager=manager
+    )
+
     while True:
         time_delta = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
@@ -229,6 +235,12 @@ def nickname_window():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == play:
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == back:
+                        main_menu()
                         return
 
             manager.process_events(event)
