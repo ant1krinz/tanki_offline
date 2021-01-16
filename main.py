@@ -5,6 +5,7 @@ import random
 import time
 import math
 import pygame_gui
+import sqlite3
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -193,7 +194,7 @@ def level():
         clock.tick(FPS)
 
 
-def nickname_window():
+def nickname_window(new):
     global WIDTH, HEIGHT, NAME
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -229,12 +230,13 @@ def nickname_window():
                 terminate()
 
             if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-                    NAME = event.text
-
-            if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == play:
+                        db = sqlite3.connect('database.db')
+                        cur = db.cursor()
+                        if new:
+                            result = cur.execute("""INSERT INTO players(player_name,level) VALUES (?,?)""",
+                                                 (entry_name.text, 1))
                         return
 
             if event.type == pygame.USEREVENT:
@@ -291,13 +293,13 @@ def main_menu():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == start_play:
-                        nickname_window()
+                        nickname_window(True)
                         return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == continue_play:
-                        nickname_window()
+                        nickname_window(False)
                         return
 
             if event.type == pygame.USEREVENT:
