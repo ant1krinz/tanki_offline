@@ -235,7 +235,7 @@ def nickname_window(new):
                         db = sqlite3.connect('database.db')
                         cur = db.cursor()
                         if new:
-                            result = cur.execute("""INSERT INTO players(player_name,level) VALUES (?,?)""",
+                            result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
                                                  (entry_name.text, 1))
                         return
 
