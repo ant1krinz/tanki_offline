@@ -25,7 +25,7 @@ enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
 
-FPS = 31
+FPS = 30
 
 SCORE = 0
 
@@ -195,6 +195,7 @@ def level():
 
 
 def nickname_window(new):
+    global SCORE, LVL
     global WIDTH, HEIGHT, NAME
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -232,11 +233,21 @@ def nickname_window(new):
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == play:
-                        db = sqlite3.connect('database.db')
+                        db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if new:
                             result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                 (entry_name.text, 1))
+                                                 (entry_name.text, 1)).fetchall()
+                            db.commit()
+                            db.close()
+                        else:
+                            result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                 (entry_name.text,)).fetchall()[0][0]
+                            LVL = result - 1
+                            SCORE = 1300 * (result - 1)
+                            db.commit()
+                            db.close()
+                            print(result)
                         return
 
             if event.type == pygame.USEREVENT:
@@ -629,16 +640,15 @@ class Shot(pygame.sprite.Sprite):
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
-    if SCORE == 1300 and LVL == 1:
+
+    if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
-
-        player, level_x, level_y = generate_level(load_level("level2.txt"))
+        LVL += 1
+        player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
-        LVL = 2
         level()
-
 
 def clear_groups():
     all_sprites.empty()
