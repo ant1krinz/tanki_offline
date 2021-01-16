@@ -33,6 +33,8 @@ NAME = ''
 
 ENEMIES_LEFT = 13
 
+PLAYER_NAME = ''
+
 LVL = 1
 
 smaller_font = pygame.font.SysFont("Century Gothic", 24)
@@ -168,9 +170,12 @@ def start_screen():
 
 start_screen()
 
+def update_data_database():
+    pass
 
 def level():
-    global playing
+    global playing, PLAYER_NAME, SCORE
+
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
@@ -195,8 +200,8 @@ def level():
 
 
 def nickname_window(new):
-    global SCORE, LVL
-    global WIDTH, HEIGHT, NAME
+    global SCORE, LVL, PLAYER_NAME
+    global WIDTH, HEIGHT
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -236,10 +241,7 @@ def nickname_window(new):
                         db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if new:
-                            result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                 (entry_name.text, 1)).fetchall()
-                            db.commit()
-                            db.close()
+                            PLAYER_NAME = entry_name.text
                         else:
                             result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
                                                  (entry_name.text,)).fetchall()[0][0]
