@@ -17,12 +17,14 @@ walls_group = pygame.sprite.Group()
 skulls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
+borders_snow_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 shot_group_player = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
+lavka_group = pygame.sprite.Group()
 
 FPS = 32
 
@@ -176,13 +178,18 @@ def load_level(filename):
 tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
+    'snow': load_image('snow.png'),
     'bush': load_image('leaves.png'),
     'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
+    'border_snow': pygame.transform.scale(load_image('snow_border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
     'train': pygame.transform.rotate(load_image('train.png'), 90),
     'car': pygame.transform.rotate(load_image('blue_car.png'), 90),
-    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90)
+    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90),
+    'river': load_image('river.png'),
+    'lavka': load_image('lavochka.png'),
+
 }
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
@@ -203,6 +210,8 @@ enemy_image = load_image('enemy_tank1.png')
 low_broke_tank_image = load_image('low_broke_tank.png')
 medium_broke_tank_image = load_image('medium_broke_tank.png')
 
+snow_place = load_image('snow.png')
+
 tile_width = tile_height = 50
 
 
@@ -218,12 +227,16 @@ class Tile(pygame.sprite.Sprite):
             bushes_group.add(self)
         if tile_type == 'border':
             borders_group.add(self)
+        if tile_type == 'border_snow':
+            borders_group.add(self)
         if tile_type == 'train':
             train_group.add(self)
         if tile_type == 'car':
             cars_group.add(self)
         if tile_type == 'skull':
             skulls_group.add(self)
+        if tile_type == 'lavka':
+            lavka_group.add(self)
             self.distinction = 'w'
         self.health = 100
         self.type = tile_type
@@ -237,7 +250,7 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
         self.health = 100
-        self.lives = 2
+        self.lives = 3
 
     def change_position(self):
         move = (0, 0)
@@ -295,6 +308,8 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, borders_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, borders_snow_group):
+            self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, enemy_group):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, train_group):
@@ -303,6 +318,9 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, skulls_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollide(self, lavka_group, True):
+            self.rect = self.rect.move(-move[0], -move[1])
+
 
 
 player = None
@@ -317,18 +335,29 @@ def generate_level(level):
         for x in range(len(level[y])):
             if level[y][x] == '.':
                 Tile('empty', x, y)
+            elif level[y][x] == '-':
+                Tile('snow', x, y)
             elif level[y][x] == '#':
                 Tile('wall', x, y)
             elif level[y][x] == ',':
                 Tile('bush', x, y)
             elif level[y][x] == '%':
                 Tile('border', x, y)
+            elif level[y][x] == '+':
+                Tile('border_snow', x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                if LVL == 1 or LVL == 2:
+                    Tile('empty', x, y)
+                elif LVL == 3:
+                    Tile('snow', x, y)
                 new_player = Player(x, y)
                 spawn_position = x, y
             elif level[y][x] == '!':
                 Tile('relsi', x, y)
+            elif level[y][x] == '1':
+                Tile('river', x, y)
+            elif level[y][x] == '2':
+                Tile('lavka', x, y)
             elif level[y][x] == '*':
                 Tile('train', x, y)
             elif level[y][x] == '$':
@@ -369,6 +398,12 @@ class Shot(pygame.sprite.Sprite):
         self.rect = self.rect.move(self.vx, self.vy)
 
         if pygame.sprite.spritecollide(self, borders_group, False):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+        elif pygame.sprite.spritecollide(self, borders_snow_group, False):
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
@@ -477,6 +512,17 @@ class Shot(pygame.sprite.Sprite):
 
         skull = pygame.sprite.spritecollideany(self, skulls_group)
 
+        if pygame.sprite.spritecollideany(self, lavka_group):
+            pygame.sprite.spritecollideany(self, lavka_group).health -= 100
+
+            if pygame.sprite.spritecollideany(self, lavka_group).health == 0:
+                pygame.sprite.spritecollideany(self, lavka_group).image = snow_place
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
         if skull:
             skull.health -= 25
 
@@ -541,6 +587,15 @@ def update_level():
             Enemy()
         LVL = 2
         level()
+    elif SCORE == 2600 and LVL == 2:
+        clear_groups()
+        ENEMIES_LEFT = 13
+
+        player, level_x, level_y = generate_level(load_level("level3.txt"))
+        for _ in range(13):
+            Enemy()
+        LVL = 3
+        level()
 
 
 def clear_groups():
@@ -550,6 +605,8 @@ def clear_groups():
     walls_group.empty()
     player_group.empty()
     borders_group.empty()
+    borders_snow_group.empty()
+    lavka_group.empty()
     tiles_group.empty()
     enemy_group.empty()
     enemy_group2.empty()
@@ -566,6 +623,8 @@ def bot_spawn(new_bot):
     new_bot.rect.y = tile_width * y
     while pygame.sprite.spritecollideany(new_bot, walls_group) \
             or pygame.sprite.spritecollideany(new_bot, borders_group) \
+            or pygame.sprite.spritecollideany(new_bot, borders_snow_group) \
+            or pygame.sprite.spritecollideany(new_bot, lavka_group) \
             or pygame.sprite.spritecollideany(new_bot, player_group) \
             or pygame.sprite.spritecollideany(new_bot, enemy_group) \
             or pygame.sprite.spritecollideany(new_bot, train_group) \
@@ -598,6 +657,8 @@ class Enemy(pygame.sprite.Sprite):
                 delta = (0, tile_width / 15)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollide(self, borders_group, False) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, lavka_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
@@ -629,6 +690,8 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, lavka_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
@@ -661,6 +724,8 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, lavka_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
@@ -693,6 +758,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.rect = self.rect.move(delta)
                 enemy_group2.remove(self)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, lavka_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
@@ -748,9 +815,9 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level1.txt"))
+player, level_x, level_y = generate_level(load_level("level3.txt"))
 
-for _ in range(0):
+for _ in range(13):
     Enemy()
 
 while True:
