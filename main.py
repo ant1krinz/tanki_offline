@@ -857,7 +857,6 @@ for _ in range(13):
 pygame.display.set_caption('Tanki Offline')
 
 while True:
-    time_delta = clock.tick(FPS) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
