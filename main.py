@@ -308,13 +308,25 @@ def main_menu():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == exit_game:
-                        terminate()
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
 
             manager.process_events(event)
 
+        screen.blit(fon, (0, 0))
         manager.update(time_delta)
         manager.draw_ui(screen)
-        pygame.display.flip()
+        pygame.display.update()
 
 
 main_menu()
@@ -845,9 +857,11 @@ for _ in range(13):
 pygame.display.set_caption('Tanki Offline')
 
 while True:
+    time_delta = clock.tick(FPS) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group_player) < 1:
                 shot = Shot(player.rect.x, player.rect.y, player)
