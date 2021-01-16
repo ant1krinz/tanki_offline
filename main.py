@@ -206,7 +206,7 @@ def nickname_window():
         text='Введите имя', manager=manager)
 
     entry_name = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 5.5), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 102, HEIGHT // 2 - 30 * 5.6), (205, 60)),
         manager=manager
     )
 
@@ -235,7 +235,15 @@ def nickname_window():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == play:
-                        return
+                        if len(entry_name.text) <= 0:
+                            message = pygame_gui.windows.UIMessageWindow(
+                                rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                html_message='Вы не ввели имя!',
+                                window_title='Сообщение',
+                                manager=manager,
+                            )
+                        else:
+                            return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
@@ -245,9 +253,10 @@ def nickname_window():
 
             manager.process_events(event)
 
+        screen.blit(fon, (0, 0))
         manager.update(time_delta)
         manager.draw_ui(screen)
-        pygame.display.flip()
+        pygame.display.update()
 
 
 def main_menu():
