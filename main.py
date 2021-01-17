@@ -26,7 +26,7 @@ train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
 stone_group = pygame.sprite.Group()
 
-FPS = 32
+FPS = 31
 
 SCORE = 0
 
@@ -177,13 +177,10 @@ def load_level(filename):
 
 tile_images = {
     'wall': load_image('box.png'),
-    'snow_wall': load_image('snow_box.png'),
     'empty': load_image('beton.png'),
-    'snow': load_image('snow.png'),
     'bush': load_image('leaves.png'),
     'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
-    'border_snow': pygame.transform.scale(load_image('snow_border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
     'train': pygame.transform.rotate(load_image('train.png'), 90),
     'car': pygame.transform.rotate(load_image('blue_car.png'), 90),
@@ -194,10 +191,6 @@ tile_images = {
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
 hard_broke_box_image = load_image('hard_broke_box.png')
-
-low_broke_box_snow_image = load_image('low_broke_box_snow.png')
-medium_broke_box_snow_image = load_image('medium_broke_box_snow.png')
-hard_broke_box_snow_image = load_image('hard_broke_box_snow.png')
 
 low_broke_train_image = pygame.transform.rotate(load_image('low_broke_train.png'), 90)
 medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_train.png'), 90)
@@ -223,13 +216,11 @@ class Tile(pygame.sprite.Sprite):
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
-        if tile_type == 'wall' or tile_type == 'snow_wall':
+        if tile_type == 'wall':
             walls_group.add(self)
         if tile_type == 'bush':
             bushes_group.add(self)
         if tile_type == 'border':
-            borders_group.add(self)
-        if tile_type == 'border_snow':
             borders_group.add(self)
         if tile_type == 'train':
             train_group.add(self)
@@ -324,10 +315,18 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
 
 
-
 player = None
 
 spawn_position = 0, 0
+
+def load_snow_images():
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images
+    low_broke_box_image = load_image('low_broke_box_snow.png')
+    medium_broke_box_image = load_image('medium_broke_box_snow.png')
+    hard_broke_box_image = load_image('hard_broke_box_snow.png')
+    tile_images['empty'] = load_image('snow.png')
+    tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
+    tile_images['wall'] = load_image('snow_box.png')
 
 
 def generate_level(level):
@@ -337,24 +336,14 @@ def generate_level(level):
         for x in range(len(level[y])):
             if level[y][x] == '.':
                 Tile('empty', x, y)
-            elif level[y][x] == '-':
-                Tile('snow', x, y)
             elif level[y][x] == '#':
-                if LVL == 3 or LVL == 2:
-                    Tile('wall', x, y)
-                else:
-                    Tile('snow_wall', x, y)
+                Tile('wall', x, y)
             elif level[y][x] == ',':
                 Tile('bush', x, y)
             elif level[y][x] == '%':
                 Tile('border', x, y)
-            elif level[y][x] == '+':
-                Tile('border_snow', x, y)
             elif level[y][x] == '@':
-                if LVL == 3 or LVL == 2:
-                    Tile('empty', x, y)
-                elif LVL == 1:
-                    Tile('snow', x, y)
+                Tile('empty', x, y)
                 new_player = Player(x, y)
                 spawn_position = x, y
             elif level[y][x] == '!':
@@ -471,37 +460,20 @@ class Shot(pygame.sprite.Sprite):
 
         if pygame.sprite.spritecollideany(self, walls_group):
             pygame.sprite.spritecollideany(self, walls_group).health -= 25
-            if LVL == 3 or LVL == 2:
 
-                if pygame.sprite.spritecollideany(self, walls_group).health == 75:
-                    pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
+            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
+                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
 
-                if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                    pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
+            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
+                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
 
-                if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                    pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
+            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
+                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
 
-                if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                    pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
-                    walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
-                    all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
-
-            else:
-
-                if pygame.sprite.spritecollideany(self, walls_group).health == 75:
-                    pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_snow_image
-
-                if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                    pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_snow_image
-
-                if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                    pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_snow_image
-
-                if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                    pygame.sprite.spritecollideany(self, walls_group).image = tile_images['snow']
-                    walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
-                    all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
+                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
+                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
+                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
 
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -530,9 +502,7 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        skull = pygame.sprite.spritecollideany(self, skulls_group)
-
-        if skull:
+        for skull in pygame.sprite.spritecollide(self, skulls_group, False):
             skull.health -= 25
 
             if skull.health == 0:
@@ -553,6 +523,12 @@ class Shot(pygame.sprite.Sprite):
                     skull.distinction = distinctions[i]
                 Shot(skull.rect.x, skull.rect.y, skull)
 
+                all_sprites.remove(self)
+                shot_group.remove(self)
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
+
+        if pygame.sprite.spritecollideany(self, stone_group):
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
@@ -560,9 +536,15 @@ class Shot(pygame.sprite.Sprite):
 
 
 def level():
+    global LVL
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
+    if LVL == 1:
+        print(1)
+        load_snow_images()
+        print(2)
+        print(tile_images)
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 2 - text.get_height()
     font2 = pygame.font.Font(None, 40)
@@ -824,7 +806,7 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level3.txt"))
+player, level_x, level_y = generate_level(load_level("level1.txt"))
 
 for _ in range(13):
     Enemy()
