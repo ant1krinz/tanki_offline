@@ -179,6 +179,7 @@ tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
+    'sand':  pygame.transform.scale(load_image('pesok.png'), (50, 50)),
     'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
@@ -336,6 +337,8 @@ def generate_level(level):
         for x in range(len(level[y])):
             if level[y][x] == '.':
                 Tile('empty', x, y)
+            elif level[y][x] == '3':
+                Tile('sand', x, y)
             elif level[y][x] == '#':
                 Tile('wall', x, y)
             elif level[y][x] == ',':
@@ -806,9 +809,9 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level1.txt"))
+player, level_x, level_y = generate_level(load_level("level4.txt"))
 
-for _ in range(13):
+for _ in range(0):
     Enemy()
 
 while True:
