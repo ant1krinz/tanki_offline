@@ -1,9 +1,11 @@
-import pygame
-import sys
+import math
 import os
 import random
+import sqlite3
+import sys
 import time
-import math
+
+import pygame
 import pygame_gui
 
 clock = pygame.time.Clock()
@@ -31,6 +33,8 @@ SCORE = 0
 NAME = ''
 
 ENEMIES_LEFT = 13
+
+PLAYER_NAME = ''
 
 LVL = 1
 
@@ -169,7 +173,13 @@ start_screen()
 
 
 def level():
-    global playing
+    global playing, PLAYER_NAME, LVL
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
@@ -193,8 +203,8 @@ def level():
         clock.tick(FPS)
 
 
-def nickname_window():
-    global WIDTH, HEIGHT, NAME
+def nickname_window(new):
+    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -206,7 +216,7 @@ def nickname_window():
         text='Введите имя', manager=manager)
 
     entry_name = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((WIDTH // 2 - 102, HEIGHT // 2 - 30 * 5.6), (205, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 5.5), (200, 60)),
         manager=manager
     )
 
@@ -229,21 +239,45 @@ def nickname_window():
                 terminate()
 
             if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-                    NAME = event.text
-
-            if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == play:
-                        if len(entry_name.text) <= 0:
+                        db = sqlite3.connect('data/database.db')
+                        cur = db.cursor()
+                        if entry_name.text:
+                            if new:
+                                result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                                     (entry_name.text, 1)).fetchall()
+                                PLAYER_NAME = entry_name.text
+                                db.commit()
+                                db.close()
+                                return
+
+                            else:
+                                result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                     (entry_name.text,)).fetchall()
+                                if result:
+                                    print(result[0][0])
+                                    SCORE = 1300 * (result[0][0] - 1)
+                                    LVL = result[0][0] - 1
+                                    PLAYER_NAME = entry_name.text
+                                    db.commit()
+                                    db.close()
+                                    return
+                                else:
+                                    message = pygame_gui.windows.UIMessageWindow(
+                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                        html_message='Введённый ник не существует!',
+                                        window_title='Сообщение',
+                                        manager=manager,
+                                    )
+                                    continue
+                        else:
                             message = pygame_gui.windows.UIMessageWindow(
                                 rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
                                 html_message='Вы не ввели имя!',
                                 window_title='Сообщение',
                                 manager=manager,
                             )
-                        else:
-                            return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
@@ -300,13 +334,13 @@ def main_menu():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == start_play:
-                        nickname_window()
+                        nickname_window(True)
                         return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == continue_play:
-                        nickname_window()
+                        nickname_window(False)
                         return
 
             if event.type == pygame.USEREVENT:
@@ -557,8 +591,8 @@ class Shot(pygame.sprite.Sprite):
                     ENEMIES_LEFT -= 1
                 else:
                     change_enemy_image(sprite)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
+                if self in shot_group_player:
+                    shot_group_player.remove(self)
 
         else:
             enemy_group2.remove(self.parent)
@@ -648,14 +682,13 @@ class Shot(pygame.sprite.Sprite):
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
-    if SCORE == 1300 and LVL == 1:
+    if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
-
-        player, level_x, level_y = generate_level(load_level("level2.txt"))
+        LVL += 1
+        player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
-        LVL = 2
         level()
 
 
@@ -869,7 +902,6 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
-
         if event.type == pygame.MOUSEBUTTONDOWN:
             if len(shot_group_player) < 1:
                 shot = Shot(player.rect.x, player.rect.y, player)
