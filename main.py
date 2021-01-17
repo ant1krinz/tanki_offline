@@ -329,6 +329,15 @@ def load_snow_images():
     tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
     tile_images['wall'] = load_image('snow_box.png')
 
+def load_sand_images():
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images
+    low_broke_box_image = load_image('low_broke_box.png')
+    medium_broke_box_image = load_image('medium_broke_box.png')
+    hard_broke_box_image = load_image('hard_broke_box.png')
+    tile_images['empty'] = load_image('sand.png')
+    tile_images['border'] = pygame.transform.scale(load_image('sand_border.png'), (50, 50))
+    tile_images['wall'] = load_image('box.png')
+
 
 def generate_level(level):
     global spawn_position
@@ -543,11 +552,10 @@ def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
-    if LVL == 1:
-        print(1)
+    if LVL == 3:
         load_snow_images()
-        print(2)
-        print(tile_images)
+    if LVL == 4:
+        load_sand_images()
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 2 - text.get_height()
     font2 = pygame.font.Font(None, 40)
@@ -586,6 +594,15 @@ def update_level():
         ENEMIES_LEFT = 13
 
         player, level_x, level_y = generate_level(load_level("level3.txt"))
+        for _ in range(13):
+            Enemy()
+        LVL = 3
+        level()
+    elif SCORE == 3900 and LVL == 3:
+        clear_groups()
+        ENEMIES_LEFT = 13
+
+        player, level_x, level_y = generate_level(load_level("level4.txt"))
         for _ in range(13):
             Enemy()
         LVL = 3
@@ -809,9 +826,9 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level4.txt"))
+player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(0):
+for _ in range(13):
     Enemy()
 
 while True:
