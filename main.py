@@ -216,7 +216,7 @@ def nickname_window(new):
         text='Введите имя', manager=manager)
 
     entry_name = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 5.5), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 102, HEIGHT // 2 - 30 * 5.5), (205, 60)),
         manager=manager
     )
 
