@@ -256,9 +256,11 @@ def nickname_window(new):
                                 result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
                                                      (entry_name.text,)).fetchall()
                                 if result:
-                                    print(result[0][0])
                                     SCORE = 1300 * (result[0][0] - 1)
-                                    LVL = result[0][0] - 1
+                                    if result[0][0] == 1:
+                                        LVL = result[0][0]
+                                    else:
+                                        LVL = result[0][0] - 1
                                     PLAYER_NAME = entry_name.text
                                     db.commit()
                                     db.close()
