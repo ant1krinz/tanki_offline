@@ -67,7 +67,7 @@ def show_info():
             screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
             screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
         if player.lives == 0:
-            terminate()
+            death_screen()
 
         screen.blit(left, (925 - left.get_width() // 2, 240))
 
@@ -201,6 +201,27 @@ def level():
                 return
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def death_screen():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('death_screen.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.update()
 
 
 def nickname_window(new):
