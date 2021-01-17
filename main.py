@@ -152,6 +152,10 @@ def respawn():
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
+    while pygame.sprite.spritecollideany(player, enemy_group):
+        delta_x = spawn_position[0] * tile_width - player.rect.x + 5
+        delta_y = spawn_position[1] * tile_width - player.rect.y
+        player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
