@@ -249,12 +249,23 @@ def nickname_window(new):
                         cur = db.cursor()
                         if entry_name.text:
                             if new:
-                                result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                     (entry_name.text, 1)).fetchall()
-                                PLAYER_NAME = entry_name.text
-                                db.commit()
-                                db.close()
-                                return
+                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                     (entry_name.text,)).fetchall()
+                                if not res1:
+                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                                         (entry_name.text, 1)).fetchall()
+                                    PLAYER_NAME = entry_name.text
+                                    db.commit()
+                                    db.close()
+                                    return
+                                else:
+                                    message = pygame_gui.windows.UIMessageWindow(
+                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                        html_message='Введённый ник существует!',
+                                        window_title='Сообщение',
+                                        manager=manager,
+                                    )
+                                    continue
 
                             else:
                                 result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
@@ -450,7 +461,7 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
         self.health = 100
-        self.lives = 2
+        self.lives = 3
         self.name = NAME
 
     def change_position(self):
@@ -731,7 +742,7 @@ def bot_spawn(new_bot):
             or pygame.sprite.spritecollideany(new_bot, train_group) \
             or pygame.sprite.spritecollideany(new_bot, cars_group):
         x = random.randint(1, 14)
-        y = random.randint(1, 8)
+        y = random.randint(1, 14)
         new_bot.rect.x = tile_width * x
         new_bot.rect.y = tile_width * y
 
