@@ -551,9 +551,9 @@ def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
-    if LVL == 2:
+    if LVL == 3 or LVL == 4:
         load_snow_images()
-    if LVL == 1:
+    if LVL == 5 or LVL == 6:
         load_sand_images()
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 2 - text.get_height()
