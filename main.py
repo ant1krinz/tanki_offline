@@ -613,66 +613,72 @@ class Shot(pygame.sprite.Sprite):
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
 
-        if pygame.sprite.spritecollideany(self, cars_group):
-            pygame.sprite.spritecollideany(self, cars_group).health -= 25
+        for car in pygame.sprite.spritecollide(self, cars_group, False):
+            car.health -= 25
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 75:
-                pygame.sprite.spritecollideany(self, cars_group).image = low_broke_car_image
+            if car.health == 75:
+                car.image = low_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 50:
-                pygame.sprite.spritecollideany(self, cars_group).image = medium_broke_car_image
+            if car.health == 50:
+                car.image = medium_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 25:
-                pygame.sprite.spritecollideany(self, cars_group).image = hard_broke_car_image
+            if car.health == 25:
+                car.image = hard_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 0:
-                pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
-                cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, cars_group))
-
-            all_sprites.remove(self)
-            shot_group.remove(self)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
-
-        if pygame.sprite.spritecollideany(self, walls_group):
-            pygame.sprite.spritecollideany(self, walls_group).health -= 25
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
-                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
-                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+            if car.health == 0:
+                x = car.rect.x / tile_width
+                y = car.rect.y / tile_width
+                Tile('empty', x, y)
+                cars_group.remove(car)
+                all_sprites.remove(car)
 
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        if pygame.sprite.spritecollideany(self, train_group):
-            pygame.sprite.spritecollideany(self, train_group).health -= 25
+        for wall in pygame.sprite.spritecollide(self, walls_group, False):
+            wall.health -= 25
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 75:
-                pygame.sprite.spritecollideany(self, train_group).image = low_broke_train_image
+            if wall.health == 75:
+                wall.image = low_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 50:
-                pygame.sprite.spritecollideany(self, train_group).image = medium_broke_train_image
+            if wall.health == 50:
+                wall.image = medium_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 25:
-                pygame.sprite.spritecollideany(self, train_group).image = hard_broke_train_image
+            if wall.health == 25:
+                wall.image = hard_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 0:
-                pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
-                train_group.remove(pygame.sprite.spritecollideany(self, train_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, train_group))
+            if wall.health == 0:
+                x = wall.rect.x / tile_width
+                y = wall.rect.y / tile_width
+                Tile('empty', x, y)
+                walls_group.remove(wall)
+                all_sprites.remove(wall)
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+        for train in pygame.sprite.spritecollide(self, train_group, False):
+            train.health -= 25
+
+            if train.health == 75:
+                train.image = low_broke_train_image
+
+            if train.health == 50:
+                train.image = medium_broke_train_image
+
+            if train.health == 25:
+                train.image = hard_broke_train_image
+
+            if train.health == 0:
+                x = train.rect.x / tile_width
+                y = train.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                train_group.remove(train)
+                all_sprites.remove(train)
 
             all_sprites.remove(self)
             shot_group.remove(self)
