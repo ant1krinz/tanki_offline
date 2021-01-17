@@ -177,6 +177,7 @@ def load_level(filename):
 
 tile_images = {
     'wall': load_image('box.png'),
+    'snow_wall': load_image('snow_box.png'),
     'empty': load_image('beton.png'),
     'snow': load_image('snow.png'),
     'bush': load_image('leaves.png'),
@@ -213,8 +214,6 @@ enemy_image = load_image('enemy_tank1.png')
 low_broke_tank_image = load_image('low_broke_tank.png')
 medium_broke_tank_image = load_image('medium_broke_tank.png')
 
-snow_place = load_image('snow.png')
-
 tile_width = tile_height = 50
 
 
@@ -224,7 +223,7 @@ class Tile(pygame.sprite.Sprite):
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
-        if tile_type == 'wall':
+        if tile_type == 'wall' or tile_type == 'snow_wall':
             walls_group.add(self)
         if tile_type == 'bush':
             bushes_group.add(self)
@@ -341,7 +340,10 @@ def generate_level(level):
             elif level[y][x] == '-':
                 Tile('snow', x, y)
             elif level[y][x] == '#':
-                Tile('wall', x, y)
+                if LVL == 3 or LVL == 2:
+                    Tile('wall', x, y)
+                else:
+                    Tile('snow_wall', x, y)
             elif level[y][x] == ',':
                 Tile('bush', x, y)
             elif level[y][x] == '%':
@@ -497,7 +499,7 @@ class Shot(pygame.sprite.Sprite):
                     pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_snow_image
 
                 if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                    pygame.sprite.spritecollideany(self, walls_group).image = tile_images['snow_place']
+                    pygame.sprite.spritecollideany(self, walls_group).image = tile_images['snow']
                     walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
                     all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
 
