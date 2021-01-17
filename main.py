@@ -25,9 +25,9 @@ enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
 
-FPS = 30
+FPS = 31
 
-SCORE = 0
+SCORE = 1300
 
 NAME = ''
 
@@ -170,12 +170,15 @@ def start_screen():
 
 start_screen()
 
-def update_data_database():
-    pass
 
 def level():
-    global playing, PLAYER_NAME, SCORE
-
+    global playing, PLAYER_NAME
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
@@ -200,8 +203,7 @@ def level():
 
 
 def nickname_window(new):
-    global SCORE, LVL, PLAYER_NAME
-    global WIDTH, HEIGHT
+    global WIDTH, HEIGHT, PLAYER_NAME
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -241,15 +243,23 @@ def nickname_window(new):
                         db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if new:
+                            result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                                 (entry_name.text, 1)).fetchall()
                             PLAYER_NAME = entry_name.text
+
                         else:
                             result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
                                                  (entry_name.text,)).fetchall()[0][0]
-                            LVL = result - 1
-                            SCORE = 1300 * (result - 1)
-                            db.commit()
-                            db.close()
-                            print(result)
+                            if result:
+                                print(result)
+                                SCORE = 1300 * (result - 1)
+                                LVL = result - 1
+                                PLAYER_NAME = entry_name.text
+                            else:
+                                continue
+
+                        db.commit()
+                        db.close()
                         return
 
             if event.type == pygame.USEREVENT:
@@ -642,7 +652,6 @@ class Shot(pygame.sprite.Sprite):
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
-
     if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
@@ -651,6 +660,8 @@ def update_level():
         for _ in range(13):
             Enemy()
         level()
+
+
 
 def clear_groups():
     all_sprites.empty()
