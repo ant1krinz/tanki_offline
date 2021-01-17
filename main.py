@@ -27,7 +27,7 @@ cars_group = pygame.sprite.Group()
 
 FPS = 31
 
-SCORE = 1300
+SCORE = 0
 
 NAME = ''
 
@@ -172,7 +172,7 @@ start_screen()
 
 
 def level():
-    global playing, PLAYER_NAME
+    global playing, PLAYER_NAME, LVL
     db = sqlite3.connect("data/database.db")
     cur = db.cursor()
     result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
@@ -203,7 +203,7 @@ def level():
 
 
 def nickname_window(new):
-    global WIDTH, HEIGHT, PLAYER_NAME
+    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -249,11 +249,11 @@ def nickname_window(new):
 
                         else:
                             result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                 (entry_name.text,)).fetchall()[0][0]
+                                                 (entry_name.text,)).fetchall()
                             if result:
-                                print(result)
-                                SCORE = 1300 * (result - 1)
-                                LVL = result - 1
+                                print([0][0])
+                                SCORE = 1300 * (result[0][0] - 1)
+                                LVL = result[0][0] - 1
                                 PLAYER_NAME = entry_name.text
                             else:
                                 continue
