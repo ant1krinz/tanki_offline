@@ -13,6 +13,8 @@ pygame.init()
 size = WIDTH, HEIGHT = 1050, 700
 screen = pygame.display.set_mode(size)
 
+start_new_game = False
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -208,7 +210,7 @@ def level():
 
 
 def nickname_window(new):
-    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL
+    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL, start_new_game
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -257,6 +259,7 @@ def nickname_window(new):
                                     PLAYER_NAME = entry_name.text
                                     db.commit()
                                     db.close()
+                                    start_new_game = True
                                     return
                                 else:
                                     message = pygame_gui.windows.UIMessageWindow(
@@ -914,10 +917,11 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level1.txt"))
-
-for _ in range(13):
-    Enemy()
+if start_new_game:
+    player, level_x, level_y = generate_level(load_level("level1.txt"))
+    for _ in range(13):
+        Enemy()
+    print(ENEMIES_LEFT)
 
 pygame.display.set_caption('Tanki Offline')
 
