@@ -277,6 +277,7 @@ def nickname_window(new):
                                     SCORE = 1300 * (result[0][0] - 1)
                                     if result[0][0] == 1:
                                         LVL = result[0][0]
+                                        start_new_game = True
                                     else:
                                         LVL = result[0][0] - 1
                                     PLAYER_NAME = entry_name.text
@@ -745,7 +746,7 @@ def bot_spawn(new_bot):
             or pygame.sprite.spritecollideany(new_bot, train_group) \
             or pygame.sprite.spritecollideany(new_bot, cars_group):
         x = random.randint(1, 14)
-        y = random.randint(1, 14)
+        y = random.randint(1, 8)
         new_bot.rect.x = tile_width * x
         new_bot.rect.y = tile_width * y
 
@@ -919,9 +920,9 @@ def change_enemy_image(enemy):
 
 if start_new_game:
     player, level_x, level_y = generate_level(load_level("level1.txt"))
+
     for _ in range(13):
         Enemy()
-    print(ENEMIES_LEFT)
 
 pygame.display.set_caption('Tanki Offline')
 
