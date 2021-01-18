@@ -32,8 +32,6 @@ FPS = 31
 
 SCORE = 0
 
-NAME = ''
-
 ENEMIES_LEFT = 13
 
 PLAYER_NAME = ''
@@ -69,7 +67,7 @@ def show_info():
             screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
             screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
         if player.lives == 0:
-            terminate()
+            death_screen()
 
         screen.blit(left, (925 - left.get_width() // 2, 240))
 
@@ -179,7 +177,7 @@ start_screen()
 
 
 def level():
-    global playing, PLAYER_NAME, LVL
+    global PLAYER_NAME, LVL
     db = sqlite3.connect("data/database.db")
     cur = db.cursor()
     result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
@@ -207,6 +205,65 @@ def level():
                 return
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def death_screen():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('death_screen.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    font = pygame.font.Font(None, 57)
+    text = font.render("ВЫ ПРОИГРАЛИ", True, pygame.Color('white'))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2 * 14
+    text_w = text.get_width()
+    text_h = text.get_height()
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme.json')
+
+    continue_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 6), (210, 70)),
+        text='Начать заново',
+        manager=manager
+    )
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 3), (210, 70)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        screen.blit(fon, (0, 0))
+        pygame.draw.rect(screen, pygame.Color('#251b11'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20))
+        screen.blit(text, (text_x, text_y))
+        manager.draw_ui(screen)
+        pygame.display.update()
 
 
 def nickname_window(new):
@@ -388,6 +445,7 @@ def main_menu():
             manager.process_events(event)
 
         screen.blit(fon, (0, 0))
+
         manager.update(time_delta)
         manager.draw_ui(screen)
         pygame.display.update()
@@ -458,15 +516,13 @@ class Tile(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
-        global NAME
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
         self.health = 100
-        self.lives = 3
-        self.name = NAME
+        self.lives = 2
 
     def change_position(self):
         move = (0, 0)
