@@ -34,7 +34,7 @@ SCORE = 0
 
 ENEMIES_LEFT = 13
 
-LVL = 5
+LVL = 3
 
 smaller_font = pygame.font.SysFont("Century Gothic", 24)
 font = pygame.font.SysFont("Century Gothic", 30)
@@ -214,6 +214,8 @@ medium_broke_tank_image = load_image('medium_broke_tank.png')
 low_broke_sand_train_image = pygame.transform.rotate(load_image('low_broke_sand_train.png'), 90)
 medium_broke_sand_train_image = pygame.transform.rotate(load_image('medium_broke_sand_train.png'), 90)
 hard_broke_sand_train_image = pygame.transform.rotate(load_image('hard_broke_sand_train.png'), 90)
+
+broke_main_tank = load_image('broke_tank.png')
 
 tile_width = tile_height = 50
 
@@ -647,8 +649,10 @@ def update_level():
         level()
         for _ in range(13):
             Enemy()
-
-
+    if LVL == 3 or LVL == 4:
+        load_snow_images()
+    if LVL == 5 or LVL == 6:
+        load_sand_images()
 
 
 def clear_groups():
@@ -880,7 +884,7 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level1.txt"))
+player, level_x, level_y = generate_level(load_level("level3.txt"))
 
 for _ in range(13):
     Enemy()
