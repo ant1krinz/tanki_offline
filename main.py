@@ -13,6 +13,8 @@ pygame.init()
 size = WIDTH, HEIGHT = 1050, 700
 screen = pygame.display.set_mode(size)
 
+start_new_game = False
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -150,6 +152,10 @@ def respawn():
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
+    while pygame.sprite.spritecollideany(player, enemy_group):
+        delta_x = spawn_position[0] * tile_width - player.rect.x + 5
+        delta_y = spawn_position[1] * tile_width - player.rect.y
+        player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
@@ -261,7 +267,7 @@ def death_screen():
 
 
 def nickname_window(new):
-    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL
+    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL, start_new_game
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -302,20 +308,35 @@ def nickname_window(new):
                         cur = db.cursor()
                         if entry_name.text:
                             if new:
-                                result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                     (entry_name.text, 1)).fetchall()
-                                PLAYER_NAME = entry_name.text
-                                db.commit()
-                                db.close()
-                                return
+                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                     (entry_name.text,)).fetchall()
+                                if not res1:
+                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                                         (entry_name.text, 1)).fetchall()
+                                    PLAYER_NAME = entry_name.text
+                                    db.commit()
+                                    db.close()
+                                    start_new_game = True
+                                    return
+                                else:
+                                    message = pygame_gui.windows.UIMessageWindow(
+                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                        html_message='Введённый ник существует!',
+                                        window_title='Сообщение',
+                                        manager=manager,
+                                    )
+                                    continue
 
                             else:
                                 result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
                                                      (entry_name.text,)).fetchall()
                                 if result:
-                                    print(result[0][0])
                                     SCORE = 1300 * (result[0][0] - 1)
-                                    LVL = result[0][0] - 1
+                                    if result[0][0] == 1:
+                                        LVL = result[0][0]
+                                        start_new_game = True
+                                    else:
+                                        LVL = result[0][0] - 1
                                     PLAYER_NAME = entry_name.text
                                     db.commit()
                                     db.close()
@@ -669,66 +690,72 @@ class Shot(pygame.sprite.Sprite):
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
 
-        if pygame.sprite.spritecollideany(self, cars_group):
-            pygame.sprite.spritecollideany(self, cars_group).health -= 25
+        for car in pygame.sprite.spritecollide(self, cars_group, False):
+            car.health -= 25
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 75:
-                pygame.sprite.spritecollideany(self, cars_group).image = low_broke_car_image
+            if car.health == 75:
+                car.image = low_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 50:
-                pygame.sprite.spritecollideany(self, cars_group).image = medium_broke_car_image
+            if car.health == 50:
+                car.image = medium_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 25:
-                pygame.sprite.spritecollideany(self, cars_group).image = hard_broke_car_image
+            if car.health == 25:
+                car.image = hard_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 0:
-                pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
-                cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, cars_group))
-
-            all_sprites.remove(self)
-            shot_group.remove(self)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
-
-        if pygame.sprite.spritecollideany(self, walls_group):
-            pygame.sprite.spritecollideany(self, walls_group).health -= 25
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
-                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
-                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+            if car.health == 0:
+                x = car.rect.x / tile_width
+                y = car.rect.y / tile_width
+                Tile('empty', x, y)
+                cars_group.remove(car)
+                all_sprites.remove(car)
 
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        if pygame.sprite.spritecollideany(self, train_group):
-            pygame.sprite.spritecollideany(self, train_group).health -= 25
+        for wall in pygame.sprite.spritecollide(self, walls_group, False):
+            wall.health -= 25
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 75:
-                pygame.sprite.spritecollideany(self, train_group).image = low_broke_train_image
+            if wall.health == 75:
+                wall.image = low_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 50:
-                pygame.sprite.spritecollideany(self, train_group).image = medium_broke_train_image
+            if wall.health == 50:
+                wall.image = medium_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 25:
-                pygame.sprite.spritecollideany(self, train_group).image = hard_broke_train_image
+            if wall.health == 25:
+                wall.image = hard_broke_box_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 0:
-                pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
-                train_group.remove(pygame.sprite.spritecollideany(self, train_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, train_group))
+            if wall.health == 0:
+                x = wall.rect.x / tile_width
+                y = wall.rect.y / tile_width
+                Tile('empty', x, y)
+                walls_group.remove(wall)
+                all_sprites.remove(wall)
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+        for train in pygame.sprite.spritecollide(self, train_group, False):
+            train.health -= 25
+
+            if train.health == 75:
+                train.image = low_broke_train_image
+
+            if train.health == 50:
+                train.image = medium_broke_train_image
+
+            if train.health == 25:
+                train.image = hard_broke_train_image
+
+            if train.health == 0:
+                x = train.rect.x / tile_width
+                y = train.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                train_group.remove(train)
+                all_sprites.remove(train)
 
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -947,10 +974,11 @@ def change_enemy_image(enemy):
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
 
-player, level_x, level_y = generate_level(load_level("level1.txt"))
+if start_new_game:
+    player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-for _ in range(13):
-    Enemy()
+    for _ in range(13):
+        Enemy()
 
 pygame.display.set_caption('Tanki Offline')
 
