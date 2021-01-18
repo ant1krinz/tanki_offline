@@ -209,6 +209,13 @@ def death_screen():
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
 
+    font = pygame.font.Font(None, 57)
+    text = font.render("ВЫ ПРОИГРАЛИ", True, pygame.Color('#ec9202'))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2 * 14
+    text_w = text.get_width()
+    text_h = text.get_height()
+
     manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
     while True:
@@ -220,7 +227,12 @@ def death_screen():
             manager.process_events(event)
 
         manager.update(time_delta)
+        screen.blit(fon, (0, 0))
         manager.draw_ui(screen)
+        pygame.draw.rect(screen, pygame.Color('#000000'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20))
+        screen.blit(text, (text_x, text_y))
+
         pygame.display.update()
 
 
