@@ -257,7 +257,6 @@ def death_screen():
                                                            text_w + 20, text_h + 20))
         screen.blit(text, (text_x, text_y))
         manager.draw_ui(screen)
-        screen.blit(text, (text_x, text_y))
         pygame.display.update()
 
 
