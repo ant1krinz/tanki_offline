@@ -599,6 +599,12 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
+        if pygame.sprite.spritecollideany(self, kaktus_group):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
 
 def level():
     global LVL
