@@ -253,11 +253,11 @@ def death_screen():
 
         manager.update(time_delta)
         screen.blit(fon, (0, 0))
-        manager.draw_ui(screen)
         pygame.draw.rect(screen, pygame.Color('#251b11'), (text_x - 10, text_y - 10,
                                                            text_w + 20, text_h + 20))
         screen.blit(text, (text_x, text_y))
-
+        manager.draw_ui(screen)
+        screen.blit(text, (text_x, text_y))
         pygame.display.update()
 
 
