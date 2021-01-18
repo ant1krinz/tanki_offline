@@ -328,6 +328,8 @@ def load_snow_images():
     tile_images['empty'] = load_image('snow.png')
     tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
     tile_images['wall'] = load_image('snow_box.png')
+    tile_images['relsi'] = pygame.transform.rotate(load_image('snow_relsi.png'), 90)
+    tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_snow_relsi.png'), 90)
 
 
 def load_sand_images():
@@ -338,6 +340,9 @@ def load_sand_images():
     tile_images['empty'] = pygame.transform.scale(load_image('sand.png'), (50, 50))
     tile_images['border'] = pygame.transform.scale(load_image('sand_border.png'), (50, 50))
     tile_images['wall'] = load_image('box.png')
+    tile_images['relsi'] = pygame.transform.rotate(load_image('sand_relsi.png'), 90)
+    tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_sand_relsi.png'), 90)
+    tile_images['train'] = pygame.transform.rotate(load_image('sand_train.png'), 90)
 
 
 def generate_level(level):
@@ -551,10 +556,6 @@ def level():
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
-    if LVL == 3 or LVL == 4:
-        load_snow_images()
-    if LVL == 5 or LVL == 6:
-        load_sand_images()
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 2 - text.get_height()
     font2 = pygame.font.Font(None, 40)
@@ -563,6 +564,10 @@ def level():
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
     screen.blit(second_text, (text_x2, text_y2))
+    if LVL == 3 or LVL == 4:
+        load_snow_images()
+    if LVL == 5 or LVL == 6:
+        load_sand_images()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -579,33 +584,16 @@ level()
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
-    if SCORE == 1300 and LVL == 1:
+    if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
-
-        player, level_x, level_y = generate_level(load_level("level3.txt"))
+        LVL += 1
+        player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
+        level()
         for _ in range(13):
             Enemy()
-        LVL = 2
-        level()
-    elif SCORE == 2600 and LVL == 2:
-        clear_groups()
-        ENEMIES_LEFT = 13
 
-        player, level_x, level_y = generate_level(load_level("level3.txt"))
-        for _ in range(13):
-            Enemy()
-        LVL = 3
-        level()
-    elif SCORE == 3900 and LVL == 3:
-        clear_groups()
-        ENEMIES_LEFT = 13
 
-        player, level_x, level_y = generate_level(load_level("level4.txt"))
-        for _ in range(13):
-            Enemy()
-        LVL = 3
-        level()
 
 
 def clear_groups():
