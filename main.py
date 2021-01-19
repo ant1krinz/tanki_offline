@@ -4,7 +4,6 @@ import random
 import sqlite3
 import sys
 import time
-
 import pygame
 import pygame_gui
 
@@ -821,22 +820,24 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
                 
-        if pygame.sprite.spritecollideany(self, sand_trains):
-            pygame.sprite.spritecollideany(self, sand_trains).health -= 25
+        for strain in pygame.sprite.spritecollide(self, sand_trains, False):
+            strain.health -= 25
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 75:
-                pygame.sprite.spritecollideany(self, sand_trains).image = low_broke_sand_train_image
+            if strain.health == 75:
+                strain.image = low_broke_sand_train_image
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 50:
-                pygame.sprite.spritecollideany(self, sand_trains).image = medium_broke_sand_train_image
+            if strain.health == 50:
+                strain.image = medium_broke_sand_train_image
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 25:
-                pygame.sprite.spritecollideany(self, sand_trains).image = hard_broke_sand_train_image
+            if strain.health == 25:
+                strain.image = hard_broke_sand_train_image
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 0:
-                pygame.sprite.spritecollideany(self, sand_trains).image = tile_images['broke_relsi']
-                sand_trains.remove(pygame.sprite.spritecollideany(self, sand_trains))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, sand_trains))
+            if strain.health == 0:
+                x = strain.rect.x / tile_width
+                y = strain.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                sand_trains.remove(strain)
+                all_sprites.remove(strain)
 
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -903,8 +904,16 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
+
+
 def level():
-    global LVL
+    global PLAYER_NAME, LVL
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
@@ -916,6 +925,7 @@ def level():
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
     screen.blit(second_text, (text_x2, text_y2))
+    playing = True
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -944,7 +954,6 @@ def update_level():
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
-        level()
 
 def clear_groups():
     all_sprites.empty()
