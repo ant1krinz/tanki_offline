@@ -49,6 +49,7 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 def show_info():
     try:
+        player_name = show_player_name()
         fps = update_fps()
         level_num = show_lvl()
         score_text = statistics()[0]
@@ -59,21 +60,22 @@ def show_info():
         left = show_enemies_left()
 
         screen.blit(fps, (925 - fps.get_width() // 2, 20))
-        screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
-        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 120))
-        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 120))
-        screen.blit(lives, (925 - lives.get_width() // 2, 160))
+        screen.blit(player_name, (925 - player_name.get_width() // 2, 80))
+        screen.blit(level_num, (925 - level_num.get_width() // 2, 120))
+        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 160))
+        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 160))
+        screen.blit(lives, (925 - lives.get_width() // 2, 200))
 
         if player.health == 100:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 200))
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 240))
         elif player.health == 50:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
         if player.lives == 0:
             death_screen()
 
-        screen.blit(left, (925 - left.get_width() // 2, 240))
+        screen.blit(left, (925 - left.get_width() // 2, 280))
 
     except TypeError:
         respawn()
@@ -117,6 +119,11 @@ def statistics():
 def show_enemies_left():
     left = smaller_font.render(f'Врагов осталось: {ENEMIES_LEFT}', 1, pygame.Color("white"))
     return left
+
+
+def show_player_name():
+    name = smaller_font.render(PLAYER_NAME, 1, pygame.Color("#6EE2E6"))
+    return name
 
 
 def auto_spawn():
@@ -254,7 +261,6 @@ def death_screen():
                             action_short_name='Ok',
                             blocking=True
                         )
-
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == restart_play:
@@ -317,48 +323,58 @@ def nickname_window(new):
                         db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if entry_name.text:
-                            if new:
-                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                   (entry_name.text,)).fetchall()
-                                if not res1:
-                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                         (entry_name.text, 1)).fetchall()
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    start_new_game = True
-                                    return
+                            if len(entry_name.text) <= 10:
+                                if new:
+                                    res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                       (entry_name.text,)).fetchall()
+                                    if not res1:
+                                        result = cur.execute(
+                                            """INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                            (entry_name.text, 1)).fetchall()
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        start_new_game = True
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя уже существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
+
                                 else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                    result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                         (entry_name.text,)).fetchall()
+                                    if result:
+                                        SCORE = 1300 * (result[0][0] - 1)
+                                        if result[0][0] == 1:
+                                            LVL = result[0][0]
+                                            start_new_game = True
+                                        else:
+                                            LVL = result[0][0] - 1
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя не существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
 
                             else:
-                                result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
-                                if result:
-                                    SCORE = 1300 * (result[0][0] - 1)
-                                    if result[0][0] == 1:
-                                        LVL = result[0][0]
-                                        start_new_game = True
-                                    else:
-                                        LVL = result[0][0] - 1
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    return
-                                else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник не существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                message = pygame_gui.windows.UIMessageWindow(
+                                    rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 166), (260, 166)),
+                                    html_message='Длина имени не может превышать 10 символов!',
+                                    window_title='Сообщение',
+                                    manager=manager,
+                                )
                         else:
                             message = pygame_gui.windows.UIMessageWindow(
                                 rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
@@ -947,6 +963,10 @@ def level():
 def restart_game():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     clear_groups()
+    if LVL == 1:
+        SCORE = 0
+    else:
+        SCORE = (LVL - 1) * 1300
     ENEMIES_LEFT = 13
     player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
     for _ in range(13):
