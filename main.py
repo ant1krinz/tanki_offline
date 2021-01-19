@@ -869,9 +869,10 @@ class Shot(pygame.sprite.Sprite):
 
         for skull in pygame.sprite.spritecollide(self, skulls_group, False):
             skull.health -= 25
-
             if skull.health == 0:
-                skull.image = tile_images['empty']
+                x = skull.rect.x / tile_width
+                y = skull.rect.y / tile_width
+                Tile('empty', x, y)
                 skulls_group.remove(skull)
                 all_sprites.remove(skull)
                 distinctions = ["w", "a", "s", "d"]
@@ -888,10 +889,10 @@ class Shot(pygame.sprite.Sprite):
                     skull.distinction = distinctions[i]
                 Shot(skull.rect.x, skull.rect.y, skull)
 
-                all_sprites.remove(self)
-                shot_group.remove(self)
-                if self in shot_group_player:
-                    shot_group_player.remove(self)
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         if pygame.sprite.spritecollideany(self, stone_group):
             all_sprites.remove(self)
