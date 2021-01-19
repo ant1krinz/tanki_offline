@@ -641,7 +641,9 @@ def load_snow_images():
 
 
 def load_sand_images():
-    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, medium_broke_train_image, hard_broke_train_image, low_broke_car_image, medium_broke_car_image, hard_broke_car_image
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, \
+        medium_broke_train_image, hard_broke_train_image, low_broke_car_image, \
+        medium_broke_car_image, hard_broke_car_image
     low_broke_box_image = load_image('low_broke_box_sand.png')
     medium_broke_box_image = load_image('medium_broke_box_sand.png')
     hard_broke_box_image = load_image('hard_broke_box_sand.png')
@@ -914,10 +916,6 @@ def level():
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
     screen.blit(second_text, (text_x2, text_y2))
-    if LVL == 3 or LVL == 4:
-        load_snow_images()
-    if LVL == 5 or LVL == 6:
-        load_sand_images()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -939,6 +937,10 @@ def update_level():
         clear_groups()
         ENEMIES_LEFT = 13
         LVL += 1
+        if LVL == 3 or LVL == 4:
+            load_snow_images()
+        if LVL == 5 or LVL == 6:
+            load_sand_images()
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
