@@ -629,15 +629,20 @@ spawn_position = 0, 0
 
 
 def load_snow_images():
-    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, medium_broke_train_image, hard_broke_train_image
     low_broke_box_image = load_image('low_broke_box_snow.png')
     medium_broke_box_image = load_image('medium_broke_box_snow.png')
     hard_broke_box_image = load_image('hard_broke_box_snow.png')
+    low_broke_train_image = pygame.transform.rotate(load_image('low_broke_snow_train.png'), 90)
+    medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_snow_train.png'), 90)
+    hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_snow_train.png'), 90)
     tile_images['empty'] = load_image('snow.png')
     tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
     tile_images['wall'] = load_image('snow_box.png')
     tile_images['relsi'] = pygame.transform.rotate(load_image('snow_relsi.png'), 90)
     tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_snow_relsi.png'), 90)
+    tile_images['train'] = pygame.transform.rotate(load_image('snow_train.png'), 90)
+    tile_images['car'] = pygame.transform.rotate(load_image('snow_car.png'), 90)
 
 
 def load_sand_images():
@@ -914,10 +919,7 @@ def level():
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
     screen.blit(second_text, (text_x2, text_y2))
-    if LVL == 3 or LVL == 4:
-        load_snow_images()
-    if LVL == 5 or LVL == 6:
-        load_sand_images()
+    load_snow_images()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
