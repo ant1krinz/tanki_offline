@@ -1,14 +1,19 @@
-import pygame
-import sys
+import math
 import os
 import random
+import sqlite3
+import sys
 import time
-import math
+
+import pygame
+import pygame_gui
 
 clock = pygame.time.Clock()
 pygame.init()
 size = WIDTH, HEIGHT = 1050, 700
 screen = pygame.display.set_mode(size)
+
+start_new_game = False
 
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -34,7 +39,9 @@ SCORE = 0
 
 ENEMIES_LEFT = 13
 
-LVL = 3
+PLAYER_NAME = ''
+
+LVL = 1
 
 smaller_font = pygame.font.SysFont("Century Gothic", 24)
 font = pygame.font.SysFont("Century Gothic", 30)
@@ -65,7 +72,7 @@ def show_info():
             screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
             screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
         if player.lives == 0:
-            terminate()
+            death_screen()
 
         screen.blit(left, (925 - left.get_width() // 2, 240))
 
@@ -150,11 +157,16 @@ def respawn():
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
+    while pygame.sprite.spritecollideany(player, enemy_group):
+        delta_x = spawn_position[0] * tile_width - player.rect.x + 5
+        delta_y = spawn_position[1] * tile_width - player.rect.y
+        player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
     fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -167,6 +179,284 @@ def start_screen():
 
 
 start_screen()
+
+
+def level():
+    global PLAYER_NAME, LVL
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 50)
+    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height()
+    font2 = pygame.font.Font(None, 40)
+    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
+    text_x2 = WIDTH // 4 - text.get_width() // 4
+    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
+    screen.blit(text, (text_x, text_y))
+    screen.blit(second_text, (text_x2, text_y2))
+    playing = True
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def death_screen():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('death_screen.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    font = pygame.font.Font(None, 57)
+    text = font.render("ВЫ ПРОИГРАЛИ", True, pygame.Color('white'))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2 * 14
+    text_w = text.get_width()
+    text_h = text.get_height()
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme.json')
+
+    continue_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 6), (210, 70)),
+        text='Начать заново',
+        manager=manager
+    )
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 3), (210, 70)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        screen.blit(fon, (0, 0))
+        pygame.draw.rect(screen, pygame.Color('#251b11'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20))
+        screen.blit(text, (text_x, text_y))
+        manager.draw_ui(screen)
+        pygame.display.update()
+
+
+def nickname_window(new):
+    global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL, start_new_game
+    fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+    text1 = pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6.7), (200, 40)),
+        text='Введите имя', manager=manager)
+
+    entry_name = pygame_gui.elements.UITextEntryLine(
+        relative_rect=pygame.Rect((WIDTH // 2 - 102, HEIGHT // 2 - 30 * 5.5), (205, 60)),
+        manager=manager
+    )
+
+    play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 4), (200, 40)),
+        text='В бой!',
+        manager=manager
+    )
+
+    back = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 2.5), (200, 40)),
+        text='Назад',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == play:
+                        db = sqlite3.connect('data/database.db')
+                        cur = db.cursor()
+                        if entry_name.text:
+                            if new:
+                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                     (entry_name.text,)).fetchall()
+                                if not res1:
+                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                                         (entry_name.text, 1)).fetchall()
+                                    PLAYER_NAME = entry_name.text
+                                    db.commit()
+                                    db.close()
+                                    start_new_game = True
+                                    return
+                                else:
+                                    message = pygame_gui.windows.UIMessageWindow(
+                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                        html_message='Введённый ник существует!',
+                                        window_title='Сообщение',
+                                        manager=manager,
+                                    )
+                                    continue
+
+                            else:
+                                result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                     (entry_name.text,)).fetchall()
+                                if result:
+                                    SCORE = 1300 * (result[0][0] - 1)
+                                    if result[0][0] == 1:
+                                        LVL = result[0][0]
+                                        start_new_game = True
+                                    else:
+                                        LVL = result[0][0] - 1
+                                    PLAYER_NAME = entry_name.text
+                                    db.commit()
+                                    db.close()
+                                    return
+                                else:
+                                    message = pygame_gui.windows.UIMessageWindow(
+                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                        html_message='Введённый ник не существует!',
+                                        window_title='Сообщение',
+                                        manager=manager,
+                                    )
+                                    continue
+                        else:
+                            message = pygame_gui.windows.UIMessageWindow(
+                                rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                html_message='Вы не ввели имя!',
+                                window_title='Сообщение',
+                                manager=manager,
+                            )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == back:
+                        main_menu()
+                        return
+
+            manager.process_events(event)
+
+        screen.blit(fon, (0, 0))
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.update()
+
+
+def main_menu():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+    start_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6), (200, 60)),
+        text='Начать игру',
+        manager=manager
+    )
+
+    continue_play = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3), (200, 60)),
+        text='Продолжить игру',
+        manager=manager
+    )
+
+    settings = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 60)),
+        text='Настройки',
+        manager=manager
+    )
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * -3), (200, 60)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == start_play:
+                        nickname_window(True)
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == continue_play:
+                        nickname_window(False)
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == settings:
+                        pass
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
+
+            manager.process_events(event)
+
+        screen.blit(fon, (0, 0))
+
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.update()
+
+
+main_menu()
 
 
 def load_level(filename):
@@ -481,50 +771,54 @@ class Shot(pygame.sprite.Sprite):
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
 
-        if pygame.sprite.spritecollideany(self, cars_group):
-            pygame.sprite.spritecollideany(self, cars_group).health -= 25
+        for car in pygame.sprite.spritecollide(self, cars_group, False):
+            car.health -= 25
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 75:
-                pygame.sprite.spritecollideany(self, cars_group).image = low_broke_car_image
+            if car.health == 75:
+                car.image = low_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 50:
-                pygame.sprite.spritecollideany(self, cars_group).image = medium_broke_car_image
+            if car.health == 50:
+                car.image = medium_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 25:
-                pygame.sprite.spritecollideany(self, cars_group).image = hard_broke_car_image
+            if car.health == 25:
+                car.image = hard_broke_car_image
 
-            if pygame.sprite.spritecollideany(self, cars_group).health == 0:
-                pygame.sprite.spritecollideany(self, cars_group).image = tile_images['empty']
-                cars_group.remove(pygame.sprite.spritecollideany(self, cars_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, cars_group))
-
-            all_sprites.remove(self)
-            shot_group.remove(self)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
-
-        if pygame.sprite.spritecollideany(self, walls_group):
-            pygame.sprite.spritecollideany(self, walls_group).health -= 25
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 75:
-                pygame.sprite.spritecollideany(self, walls_group).image = low_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 50:
-                pygame.sprite.spritecollideany(self, walls_group).image = medium_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 25:
-                pygame.sprite.spritecollideany(self, walls_group).image = hard_broke_box_image
-
-            if pygame.sprite.spritecollideany(self, walls_group).health == 0:
-                pygame.sprite.spritecollideany(self, walls_group).image = tile_images['empty']
-                walls_group.remove(pygame.sprite.spritecollideany(self, walls_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, walls_group))
+            if car.health == 0:
+                x = car.rect.x / tile_width
+                y = car.rect.y / tile_width
+                Tile('empty', x, y)
+                cars_group.remove(car)
+                all_sprites.remove(car)
 
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
+        for wall in pygame.sprite.spritecollide(self, walls_group, False):
+            wall.health -= 25
+
+            if wall.health == 75:
+                wall.image = low_broke_box_image
+
+            if wall.health == 50:
+                wall.image = medium_broke_box_image
+
+            if wall.health == 25:
+                wall.image = hard_broke_box_image
+
+            if wall.health == 0:
+                x = wall.rect.x / tile_width
+                y = wall.rect.y / tile_width
+                Tile('empty', x, y)
+                walls_group.remove(wall)
+                all_sprites.remove(wall)
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+                
         if pygame.sprite.spritecollideany(self, sand_trains):
             pygame.sprite.spritecollideany(self, sand_trains).health -= 25
 
@@ -546,23 +840,24 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
+                
+        for train in pygame.sprite.spritecollide(self, train_group, False):
+            train.health -= 25
+            if train.health == 75:
+                train.image = low_broke_train_image
 
-        if pygame.sprite.spritecollideany(self, train_group):
-            pygame.sprite.spritecollideany(self, train_group).health -= 25
+            if train.health == 50:
+                train.image = medium_broke_train_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 75:
-                pygame.sprite.spritecollideany(self, train_group).image = low_broke_train_image
+            if train.health == 25:
+                train.image = hard_broke_train_image
 
-            if pygame.sprite.spritecollideany(self, train_group).health == 50:
-                pygame.sprite.spritecollideany(self, train_group).image = medium_broke_train_image
-
-            if pygame.sprite.spritecollideany(self, train_group).health == 25:
-                pygame.sprite.spritecollideany(self, train_group).image = hard_broke_train_image
-
-            if pygame.sprite.spritecollideany(self, train_group).health == 0:
-                pygame.sprite.spritecollideany(self, train_group).image = tile_images['broke_relsi']
-                train_group.remove(pygame.sprite.spritecollideany(self, train_group))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, train_group))
+            if train.health == 0:
+                x = train.rect.x / tile_width
+                y = train.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                train_group.remove(train)
+                all_sprites.remove(train)
 
             all_sprites.remove(self)
             shot_group.remove(self)
@@ -606,8 +901,6 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
-
-
 def level():
     global LVL
     screen.fill((0, 0, 0))
@@ -639,6 +932,7 @@ def level():
 level()
 
 
+
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     if SCORE / LVL == 1300:
@@ -646,14 +940,9 @@ def update_level():
         ENEMIES_LEFT = 13
         LVL += 1
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
-        level()
         for _ in range(13):
             Enemy()
-    if LVL == 3 or LVL == 4:
-        load_snow_images()
-    if LVL == 5 or LVL == 6:
-        load_sand_images()
-
+        level()
 
 def clear_groups():
     all_sprites.empty()
@@ -883,11 +1172,13 @@ def change_enemy_image(enemy):
         elif dist == 'd':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
+if start_new_game:
+    player, level_x, level_y = generate_level(load_level("level1.txt"))
 
-player, level_x, level_y = generate_level(load_level("level3.txt"))
+    for _ in range(13):
+        Enemy()
 
-for _ in range(13):
-    Enemy()
+pygame.display.set_caption('Tanki Offline')
 
 while True:
     for event in pygame.event.get():
