@@ -313,7 +313,7 @@ def nickname_window(new):
                         if entry_name.text:
                             if new:
                                 res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
+                                                   (entry_name.text,)).fetchall()
                                 if not res1:
                                     result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
                                                          (entry_name.text, 1)).fetchall()
@@ -819,7 +819,7 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
-                
+
         for strain in pygame.sprite.spritecollide(self, sand_trains, False):
             strain.health -= 25
 
@@ -843,7 +843,7 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
-                
+
         for train in pygame.sprite.spritecollide(self, train_group, False):
             train.health -= 25
             if train.health == 75:
@@ -938,10 +938,6 @@ def level():
         clock.tick(FPS)
 
 
-level()
-
-
-
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     if SCORE / LVL == 1300:
@@ -955,6 +951,8 @@ def update_level():
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
+        level()
+
 
 def clear_groups():
     all_sprites.empty()
@@ -1184,11 +1182,12 @@ def change_enemy_image(enemy):
         elif dist == 'd':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
+
 if start_new_game:
     player, level_x, level_y = generate_level(load_level("level1.txt"))
-
     for _ in range(13):
         Enemy()
+    level()
 
 pygame.display.set_caption('Tanki Offline')
 
