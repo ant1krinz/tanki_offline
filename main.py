@@ -226,7 +226,7 @@ def death_screen():
 
     manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme.json')
 
-    continue_play = pygame_gui.elements.UIButton(
+    restart_play = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 6), (210, 70)),
         text='Начать заново',
         manager=manager
@@ -254,6 +254,12 @@ def death_screen():
                             action_short_name='Ok',
                             blocking=True
                         )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == restart_play:
+                        restart_game()
+                        return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
@@ -938,6 +944,16 @@ def level():
         clock.tick(FPS)
 
 
+def restart_game():
+    global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    clear_groups()
+    ENEMIES_LEFT = 13
+    player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
+    for _ in range(13):
+        Enemy()
+    level()
+
+
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     if SCORE / LVL == 1300:
@@ -1191,7 +1207,9 @@ if start_new_game:
 
 pygame.display.set_caption('Tanki Offline')
 
-while True:
+running = True
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
