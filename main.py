@@ -753,12 +753,6 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        elif pygame.sprite.spritecollide(self, borders_snow_group, False):
-            all_sprites.remove(self)
-            shot_group.remove(self)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
-
         if self.parent == player:
             for sprite in pygame.sprite.spritecollide(self, enemy_group, False):
                 all_sprites.remove(self)
@@ -775,7 +769,7 @@ class Shot(pygame.sprite.Sprite):
                 if self in shot_group_player:
                     shot_group_player.remove(self)
 
-        else:
+        elif self.parent in enemy_group:
             enemy_group2.remove(self.parent)
             for sprite in pygame.sprite.spritecollide(self, enemy_group2, False):
                 all_sprites.remove(self)
@@ -793,6 +787,25 @@ class Shot(pygame.sprite.Sprite):
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
+
+        elif self.parent in skulls_group:
+            print(1)
+            for enemy in pygame.sprite.spritecollide(self, enemy_group, False):
+                all_sprites.remove(self)
+                shot_group.remove(self)
+                enemy.health -= 20
+                if enemy.health == 0:
+                    enemy_group.remove(enemy)
+                    enemy_group2.remove(enemy)
+                    all_sprites.remove(enemy)
+                    ENEMIES_LEFT -= 1
+                else:
+                    change_enemy_image(enemy)
+
+            if pygame.sprite.spritecollideany(self, player_group):
+                player.health -= 50
+                shot_group.remove(self)
+                all_sprites.remove(self)
 
         for car in pygame.sprite.spritecollide(self, cars_group, False):
             car.health -= 25
