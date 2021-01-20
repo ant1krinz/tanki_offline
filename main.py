@@ -4,7 +4,6 @@ import random
 import sqlite3
 import sys
 import time
-
 import pygame
 import pygame_gui
 
@@ -19,14 +18,20 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
+skulls_group = pygame.sprite.Group()
 bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
+borders_snow_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 shot_group_player = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 enemy_group2 = pygame.sprite.Group()
 train_group = pygame.sprite.Group()
 cars_group = pygame.sprite.Group()
+stone_group = pygame.sprite.Group()
+sand_trains = pygame.sprite.Group()
+kaktus_group = pygame.sprite.Group()
+spawn_group = pygame.sprite.Group()
 
 FPS = 31
 
@@ -44,35 +49,33 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 
 def show_info():
-    try:
-        fps = update_fps()
-        level_num = show_lvl()
-        score_text = statistics()[0]
-        score_amount = statistics()[1]
-        lives = show_lives()
-        hp1 = show_hp()[0]
-        hp2 = show_hp()[1]
-        left = show_enemies_left()
+    player_name = show_player_name()
+    fps = update_fps()
+    level_num = show_lvl()
+    score_text = statistics()[0]
+    score_amount = statistics()[1]
+    lives = show_lives()
+    res = show_hp()
+    if res:
+        hp1 = res[0]
+        hp2 = res[1]
+    left = show_enemies_left()
 
-        screen.blit(fps, (925 - fps.get_width() // 2, 20))
-        screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
-        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 120))
-        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 120))
-        screen.blit(lives, (925 - lives.get_width() // 2, 160))
+    screen.blit(fps, (925 - fps.get_width() // 2, 20))
+    screen.blit(player_name, (925 - player_name.get_width() // 2, 80))
+    screen.blit(level_num, (925 - level_num.get_width() // 2, 120))
+    screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 160))
+    screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 160))
+    screen.blit(lives, (925 - lives.get_width() // 2, 200))
 
-        if player.health == 100:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 200))
-        elif player.health == 50:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
-        if player.lives == 0:
-            death_screen()
+    if player.health == 100:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 240))
+    elif player.health == 50:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
 
-        screen.blit(left, (925 - left.get_width() // 2, 240))
-
-    except TypeError:
-        respawn()
+    screen.blit(left, (925 - left.get_width() // 2, 280))
 
 
 def show_lives():
@@ -115,6 +118,11 @@ def show_enemies_left():
     return left
 
 
+def show_player_name():
+    name = smaller_font.render(PLAYER_NAME, 1, pygame.Color("#6EE2E6"))
+    return name
+
+
 def auto_spawn():
     global ENEMIES_LEFT
     necessary = 1300 * LVL - SCORE
@@ -147,15 +155,10 @@ def terminate():
 
 
 def respawn():
-    player.lives -= 1
     player.health = 100
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
-    while pygame.sprite.spritecollideany(player, enemy_group):
-        delta_x = spawn_position[0] * tile_width - player.rect.x + 5
-        delta_y = spawn_position[1] * tile_width - player.rect.y
-        player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
@@ -222,7 +225,7 @@ def death_screen():
 
     manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme.json')
 
-    continue_play = pygame_gui.elements.UIButton(
+    restart_play = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 6), (210, 70)),
         text='Начать заново',
         manager=manager
@@ -230,6 +233,64 @@ def death_screen():
 
     exit_game = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 3), (210, 70)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == restart_play:
+                        restart_game()
+                        return
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        screen.blit(fon, (0, 0))
+        pygame.draw.rect(screen, pygame.Color('#251b11'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20))
+        screen.blit(text, (text_x, text_y))
+        manager.draw_ui(screen)
+        pygame.display.update()
+
+
+def victory_screen():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('victory.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    font = pygame.font.Font(None, 57)
+    text = font.render("ВЫ ВЫИГРАЛИ", True, pygame.Color('black'))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2 * 14
+    text_w = text.get_width()
+    text_h = text.get_height()
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme2.json')
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 35 * 4), (210, 70)),
         text='Выйти из игры',
         manager=manager
     )
@@ -259,8 +320,10 @@ def death_screen():
 
         manager.update(time_delta)
         screen.blit(fon, (0, 0))
-        pygame.draw.rect(screen, pygame.Color('#251b11'), (text_x - 10, text_y - 10,
+        pygame.draw.rect(screen, pygame.Color('#FFE44A'), (text_x - 10, text_y - 10,
                                                            text_w + 20, text_h + 20))
+        pygame.draw.rect(screen, pygame.Color('#000000'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20), 4)
         screen.blit(text, (text_x, text_y))
         manager.draw_ui(screen)
         pygame.display.update()
@@ -307,48 +370,58 @@ def nickname_window(new):
                         db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if entry_name.text:
-                            if new:
-                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
-                                if not res1:
-                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                         (entry_name.text, 1)).fetchall()
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    start_new_game = True
-                                    return
+                            if len(entry_name.text) <= 10:
+                                if new:
+                                    res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                       (entry_name.text,)).fetchall()
+                                    if not res1:
+                                        result = cur.execute(
+                                            """INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                            (entry_name.text, 1)).fetchall()
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        start_new_game = True
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя уже существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
+
                                 else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                    result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                         (entry_name.text,)).fetchall()
+                                    if result:
+                                        SCORE = 1300 * (result[0][0] - 1)
+                                        if result[0][0] == 1:
+                                            LVL = result[0][0]
+                                            start_new_game = True
+                                        else:
+                                            LVL = result[0][0] - 1
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя не существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
 
                             else:
-                                result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
-                                if result:
-                                    SCORE = 1300 * (result[0][0] - 1)
-                                    if result[0][0] == 1:
-                                        LVL = result[0][0]
-                                        start_new_game = True
-                                    else:
-                                        LVL = result[0][0] - 1
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    return
-                                else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник не существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                message = pygame_gui.windows.UIMessageWindow(
+                                    rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 166), (260, 166)),
+                                    html_message='Длина имени не может превышать 10 символов!',
+                                    window_title='Сообщение',
+                                    manager=manager,
+                                )
                         else:
                             message = pygame_gui.windows.UIMessageWindow(
                                 rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
@@ -380,25 +453,19 @@ def main_menu():
     manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
     start_play = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 7), (220, 70)),
         text='Начать игру',
         manager=manager
     )
 
     continue_play = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3.5), (220, 70)),
         text='Продолжить игру',
         manager=manager
     )
 
-    settings = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 60)),
-        text='Настройки',
-        manager=manager
-    )
-
     exit_game = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * -3), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (220, 70)),
         text='Выйти из игры',
         manager=manager
     )
@@ -420,11 +487,6 @@ def main_menu():
                     if event.ui_element == continue_play:
                         nickname_window(False)
                         return
-
-            if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == settings:
-                        pass
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
@@ -466,11 +528,17 @@ tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
     'bush': load_image('leaves.png'),
+    'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
     'train': pygame.transform.rotate(load_image('train.png'), 90),
     'car': pygame.transform.rotate(load_image('blue_car.png'), 90),
-    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90)
+    'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90),
+    'stone': load_image('kamni.png'),
+    'sandy_train_main': pygame.transform.rotate(load_image('sand_train.png'), 90),
+    'kaktus': load_image('cactus.png'),
+    'spawn': load_image('flag.png')
+
 }
 low_broke_box_image = load_image('low_broke_box.png')
 medium_broke_box_image = load_image('medium_broke_box.png')
@@ -491,6 +559,12 @@ enemy_image = load_image('enemy_tank1.png')
 low_broke_tank_image = load_image('low_broke_tank.png')
 medium_broke_tank_image = load_image('medium_broke_tank.png')
 
+low_broke_sand_train_image = pygame.transform.rotate(load_image('low_broke_sand_train.png'), 90)
+medium_broke_sand_train_image = pygame.transform.rotate(load_image('medium_broke_sand_train.png'), 90)
+hard_broke_sand_train_image = pygame.transform.rotate(load_image('hard_broke_sand_train.png'), 90)
+
+broke_main_tank = load_image('broke_tank.png')
+
 tile_width = tile_height = 50
 
 
@@ -510,6 +584,17 @@ class Tile(pygame.sprite.Sprite):
             train_group.add(self)
         if tile_type == 'car':
             cars_group.add(self)
+        if tile_type == 'skull':
+            skulls_group.add(self)
+            self.distinction = 'w'
+        if tile_type == 'stone':
+            stone_group.add(self)
+        if tile_type == 'sandy_train_main':
+            sand_trains.add(self)
+        if tile_type == 'kaktus':
+            kaktus_group.add(self)
+        if tile_type == 'spawn':
+            spawn_group.add(self)
         self.health = 100
         self.type = tile_type
 
@@ -578,7 +663,13 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.rect.move(move)
         if pygame.sprite.spritecollideany(self, walls_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, kaktus_group):
+            self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, sand_trains):
+            self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, borders_group):
+            self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, borders_snow_group):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, enemy_group):
             self.rect = self.rect.move(-move[0], -move[1])
@@ -586,11 +677,56 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, cars_group):
             self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, skulls_group):
+            self.rect = self.rect.move(-move[0], -move[1])
+        if pygame.sprite.spritecollideany(self, stone_group):
+            self.rect = self.rect.move(-move[0], -move[1])
 
 
 player = None
 
 spawn_position = 0, 0
+
+
+def load_snow_images():
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, medium_broke_train_image, hard_broke_train_image
+    low_broke_box_image = load_image('low_broke_box_snow.png')
+    medium_broke_box_image = load_image('medium_broke_box_snow.png')
+    hard_broke_box_image = load_image('hard_broke_box_snow.png')
+    low_broke_train_image = pygame.transform.rotate(load_image('low_broke_snow_train.png'), 90)
+    medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_snow_train.png'), 90)
+    hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_snow_train.png'), 90)
+    tile_images['empty'] = load_image('snow.png')
+    tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
+    tile_images['wall'] = load_image('snow_box.png')
+    tile_images['relsi'] = pygame.transform.rotate(load_image('snow_relsi.png'), 90)
+    tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_snow_relsi.png'), 90)
+    tile_images['train'] = pygame.transform.rotate(load_image('snow_train.png'), 90)
+    tile_images['car'] = pygame.transform.rotate(load_image('snow_car.png'), 90)
+    tile_images['spawn'] = load_image('snow_flag.png')
+
+
+def load_sand_images():
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, \
+        medium_broke_train_image, hard_broke_train_image, low_broke_car_image, \
+        medium_broke_car_image, hard_broke_car_image
+    low_broke_box_image = load_image('low_broke_box_sand.png')
+    medium_broke_box_image = load_image('medium_broke_box_sand.png')
+    hard_broke_box_image = load_image('hard_broke_box_sand.png')
+    low_broke_train_image = pygame.transform.rotate(load_image('low_broke_sand_train_2part.png'), 90)
+    medium_broke_train_image = pygame.transform.rotate(load_image('medium_broke_sand_train_2part.png'), 90)
+    hard_broke_train_image = pygame.transform.rotate(load_image('hard_broke_sand_train_2part.png'), 90)
+    low_broke_car_image = pygame.transform.rotate(load_image('low_broke_sand_car.png'), 90)
+    medium_broke_car_image = pygame.transform.rotate(load_image('medium_broke_sand_car.png'), 90)
+    hard_broke_car_image = pygame.transform.rotate(load_image('hard_broke_sand_car.png'), 90)
+    tile_images['empty'] = pygame.transform.scale(load_image('sand.png'), (50, 50))
+    tile_images['border'] = pygame.transform.scale(load_image('sand_border.png'), (50, 50))
+    tile_images['wall'] = load_image('box.png')
+    tile_images['relsi'] = pygame.transform.rotate(load_image('sand_relsi.png'), 90)
+    tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_sand_relsi.png'), 90)
+    tile_images['train'] = pygame.transform.rotate(load_image('sand_train_2part.png'), 90)
+    tile_images['car'] = pygame.transform.rotate(load_image('sand_car.png'), 90)
+    tile_images['spawn'] = load_image('sand_flag.png')
 
 
 def generate_level(level):
@@ -607,15 +743,23 @@ def generate_level(level):
             elif level[y][x] == '%':
                 Tile('border', x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                Tile('spawn', x, y)
                 new_player = Player(x, y)
                 spawn_position = x, y
             elif level[y][x] == '!':
                 Tile('relsi', x, y)
+            elif level[y][x] == '2':
+                Tile('stone', x, y)
             elif level[y][x] == '*':
                 Tile('train', x, y)
             elif level[y][x] == '$':
                 Tile('car', x, y)
+            elif level[y][x] == '&':
+                Tile('skull', x, y)
+            elif level[y][x] == '8':
+                Tile('sandy_train_main', x, y)
+            elif level[y][x] == '9':
+                Tile('kaktus', x, y)
     return new_player, x, y
 
 
@@ -671,7 +815,7 @@ class Shot(pygame.sprite.Sprite):
                 if self in shot_group_player:
                     shot_group_player.remove(self)
 
-        else:
+        elif self.parent in enemy_group:
             enemy_group2.remove(self.parent)
             for sprite in pygame.sprite.spritecollide(self, enemy_group2, False):
                 all_sprites.remove(self)
@@ -684,8 +828,15 @@ class Shot(pygame.sprite.Sprite):
                     ENEMIES_LEFT -= 1
                 else:
                     change_enemy_image(sprite)
+
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
+                if player.health == 0:
+                    player.lives -= 1
+                    if player.lives == 0:
+                        death_screen()
+                    if player.lives == 1:
+                        respawn()
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
@@ -738,9 +889,32 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
+        for strain in pygame.sprite.spritecollide(self, sand_trains, False):
+            strain.health -= 25
+
+            if strain.health == 75:
+                strain.image = low_broke_sand_train_image
+
+            if strain.health == 50:
+                strain.image = medium_broke_sand_train_image
+
+            if strain.health == 25:
+                strain.image = hard_broke_sand_train_image
+
+            if strain.health == 0:
+                x = strain.rect.x / tile_width
+                y = strain.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                sand_trains.remove(strain)
+                all_sprites.remove(strain)
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
         for train in pygame.sprite.spritecollide(self, train_group, False):
             train.health -= 25
-
             if train.health == 75:
                 train.image = low_broke_train_image
 
@@ -762,13 +936,105 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
+        for skull in pygame.sprite.spritecollide(self, skulls_group, False):
+            skull.health -= 25
+            if skull.health == 0:
+                x = skull.rect.x / tile_width
+                y = skull.rect.y / tile_width
+                Tile('empty', x, y)
+                skulls_group.remove(skull)
+                all_sprites.remove(skull)
+                distinctions = ["w", "a", "s", "d"]
+
+                for i in range(1, 4):
+                    Shot(skull.rect.x, skull.rect.y, skull)
+                    skull.distinction = distinctions[i]
+                Shot(skull.rect.x, skull.rect.y, skull)
+
+                skull.distinction = 'w'
+
+                for i in range(1, 4):
+                    Shot(skull.rect.x, skull.rect.y, skull)
+                    skull.distinction = distinctions[i]
+                Shot(skull.rect.x, skull.rect.y, skull)
+
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+        if pygame.sprite.spritecollideany(self, stone_group):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+        if pygame.sprite.spritecollideany(self, kaktus_group):
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
+
+
+def level():
+    global PLAYER_NAME, LVL
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 50)
+    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height()
+    font2 = pygame.font.Font(None, 40)
+    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
+    text_x2 = WIDTH // 4 - text.get_width() // 4
+    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
+    screen.blit(text, (text_x, text_y))
+    screen.blit(second_text, (text_x2, text_y2))
+    playing = True
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def restart_game():
+    global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    clear_groups()
+    if LVL == 1:
+        SCORE = 0
+    else:
+        SCORE = (LVL - 1) * 1300
+    ENEMIES_LEFT = 13
+    player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
+    for _ in range(13):
+        Enemy()
+    level()
+
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    if SCORE == 7800 and LVL == 6:
+        clear_groups()
+        victory_screen()
+        return
     if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
         LVL += 1
+        if LVL == 3 or LVL == 4:
+            load_snow_images()
+        if LVL == 5 or LVL == 6:
+            load_sand_images()
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
@@ -780,13 +1046,18 @@ def clear_groups():
     shot_group.empty()
     shot_group_player.empty()
     walls_group.empty()
+    sand_trains.empty()
+    kaktus_group.empty()
     player_group.empty()
     borders_group.empty()
+    borders_snow_group.empty()
+    stone_group.empty()
     tiles_group.empty()
     enemy_group.empty()
     enemy_group2.empty()
     bushes_group.empty()
     train_group.empty()
+    skulls_group.empty()
     cars_group.empty()
 
 
@@ -797,9 +1068,14 @@ def bot_spawn(new_bot):
     new_bot.rect.y = tile_width * y
     while pygame.sprite.spritecollideany(new_bot, walls_group) \
             or pygame.sprite.spritecollideany(new_bot, borders_group) \
+            or pygame.sprite.spritecollideany(new_bot, borders_snow_group) \
+            or pygame.sprite.spritecollideany(new_bot, sand_trains) \
+            or pygame.sprite.spritecollideany(new_bot, kaktus_group) \
+            or pygame.sprite.spritecollideany(new_bot, stone_group) \
             or pygame.sprite.spritecollideany(new_bot, player_group) \
             or pygame.sprite.spritecollideany(new_bot, enemy_group) \
             or pygame.sprite.spritecollideany(new_bot, train_group) \
+            or pygame.sprite.spritecollideany(new_bot, skulls_group) \
             or pygame.sprite.spritecollideany(new_bot, cars_group):
         x = random.randint(1, 14)
         y = random.randint(1, 8)
@@ -828,11 +1104,17 @@ class Enemy(pygame.sprite.Sprite):
                 delta = (0, tile_width / 15)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollide(self, borders_group, False) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, kaktus_group) or \
+                        pygame.sprite.spritecollideany(self, sand_trains) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 90)
@@ -858,11 +1140,17 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, kaktus_group) or \
+                        pygame.sprite.spritecollideany(self, sand_trains) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 270)
@@ -889,11 +1177,17 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, kaktus_group) or \
+                        pygame.sprite.spritecollideany(self, sand_trains) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 180)
@@ -920,11 +1214,17 @@ class Enemy(pygame.sprite.Sprite):
                 self.rect = self.rect.move(delta)
                 enemy_group2.remove(self)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
+                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
+                        pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
+                        pygame.sprite.spritecollideany(self, kaktus_group) or \
+                        pygame.sprite.spritecollideany(self, sand_trains) or \
                         pygame.sprite.spritecollideany(self, enemy_group2) or \
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, skulls_group) or \
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         pass
@@ -945,7 +1245,7 @@ class Enemy(pygame.sprite.Sprite):
                             self.image = pygame.transform.rotate(self.image, 180)
                             self.distinction = 's'
                 enemy_group2.add(self)
-            res3 = random.randint(1, 100)
+            res3 = random.randint(1, 80)
             if res3 == 1:
                 Shot(self.rect.x, self.rect.y, self)
 
@@ -976,13 +1276,15 @@ def change_enemy_image(enemy):
 
 if start_new_game:
     player, level_x, level_y = generate_level(load_level("level1.txt"))
-
     for _ in range(13):
         Enemy()
+    level()
 
 pygame.display.set_caption('Tanki Offline')
 
-while True:
+running = True
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
@@ -1000,7 +1302,10 @@ while True:
     shot_group.draw(screen)
     shot_group.update()
     walls_group.update()
+    kaktus_group.update()
+    sand_trains.update()
     train_group.update()
+    skulls_group.update()
     enemy_group.draw(screen)
     enemy_group.update()
     pygame.display.flip()
