@@ -453,25 +453,19 @@ def main_menu():
     manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
     start_play = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 6), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 7), (220, 70)),
         text='Начать игру',
         manager=manager
     )
 
     continue_play = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * 3.5), (220, 70)),
         text='Продолжить игру',
         manager=manager
     )
 
-    settings = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 60)),
-        text='Настройки',
-        manager=manager
-    )
-
     exit_game = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2 - 30 * -3), (200, 60)),
+        relative_rect=pygame.Rect((WIDTH // 2 - 100, HEIGHT // 2), (220, 70)),
         text='Выйти из игры',
         manager=manager
     )
@@ -493,11 +487,6 @@ def main_menu():
                     if event.ui_element == continue_play:
                         nickname_window(False)
                         return
-
-            if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == settings:
-                        pass
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
