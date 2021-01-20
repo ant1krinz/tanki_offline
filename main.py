@@ -31,6 +31,7 @@ cars_group = pygame.sprite.Group()
 stone_group = pygame.sprite.Group()
 sand_trains = pygame.sprite.Group()
 kaktus_group = pygame.sprite.Group()
+spawn_group = pygame.sprite.Group()
 
 FPS = 31
 
@@ -491,7 +492,8 @@ tile_images = {
     'broke_relsi': pygame.transform.rotate(load_image('broken_relsi.png'), 90),
     'stone': load_image('kamni.png'),
     'sandy_train_main': pygame.transform.rotate(load_image('sand_train.png'), 90),
-    'kaktus': load_image('cactus.png')
+    'kaktus': load_image('cactus.png'),
+    'spawn': load_image('flag.png')
 
 }
 low_broke_box_image = load_image('low_broke_box.png')
@@ -547,6 +549,8 @@ class Tile(pygame.sprite.Sprite):
             sand_trains.add(self)
         if tile_type == 'kaktus':
             kaktus_group.add(self)
+        if tile_type == 'spawn':
+            spawn_group.add(self)
         self.health = 100
         self.type = tile_type
 
@@ -655,6 +659,7 @@ def load_snow_images():
     tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_snow_relsi.png'), 90)
     tile_images['train'] = pygame.transform.rotate(load_image('snow_train.png'), 90)
     tile_images['car'] = pygame.transform.rotate(load_image('snow_car.png'), 90)
+    tile_images['spawn'] = load_image('snow_flag.png')
 
 
 def load_sand_images():
@@ -677,6 +682,7 @@ def load_sand_images():
     tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_sand_relsi.png'), 90)
     tile_images['train'] = pygame.transform.rotate(load_image('sand_train_2part.png'), 90)
     tile_images['car'] = pygame.transform.rotate(load_image('sand_car.png'), 90)
+    tile_images['spawn'] = load_image('sand_flag.png')
 
 
 def generate_level(level):
@@ -693,7 +699,7 @@ def generate_level(level):
             elif level[y][x] == '%':
                 Tile('border', x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                Tile('spawn', x, y)
                 new_player = Player(x, y)
                 spawn_position = x, y
             elif level[y][x] == '!':
@@ -977,9 +983,9 @@ def update_level():
         clear_groups()
         ENEMIES_LEFT = 13
         LVL += 1
-        if LVL == 3 or LVL == 4:
+        if LVL == 3:
             load_snow_images()
-        if LVL == 5 or LVL == 6:
+        if LVL == 5:
             load_sand_images()
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
@@ -1059,7 +1065,8 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
                         pygame.sprite.spritecollideany(self, skulls_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 90)
@@ -1094,7 +1101,8 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
                         pygame.sprite.spritecollideany(self, skulls_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 270)
@@ -1130,7 +1138,8 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
                         pygame.sprite.spritecollideany(self, skulls_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         self.image = pygame.transform.rotate(self.image, 180)
@@ -1166,7 +1175,8 @@ class Enemy(pygame.sprite.Sprite):
                         pygame.sprite.spritecollideany(self, player_group) or \
                         pygame.sprite.spritecollideany(self, train_group) or \
                         pygame.sprite.spritecollideany(self, skulls_group) or \
-                        pygame.sprite.spritecollideany(self, cars_group):
+                        pygame.sprite.spritecollideany(self, cars_group) or \
+                        pygame.sprite.spritecollideany(self, spawn_group):
                     self.rect = self.rect.move(-delta[0], -delta[1])
                     if self.distinction == "w":
                         pass
@@ -1187,7 +1197,7 @@ class Enemy(pygame.sprite.Sprite):
                             self.image = pygame.transform.rotate(self.image, 180)
                             self.distinction = 's'
                 enemy_group2.add(self)
-            res3 = random.randint(1, 100)
+            res3 = random.randint(1, 80)
             if res3 == 1:
                 Shot(self.rect.x, self.rect.y, self)
 
