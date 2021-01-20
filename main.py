@@ -48,35 +48,33 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 
 def show_info():
-    try:
-        player_name = show_player_name()
-        fps = update_fps()
-        level_num = show_lvl()
-        score_text = statistics()[0]
-        score_amount = statistics()[1]
-        lives = show_lives()
-        hp1 = show_hp()[0]
-        hp2 = show_hp()[1]
-        left = show_enemies_left()
+    player_name = show_player_name()
+    fps = update_fps()
+    level_num = show_lvl()
+    score_text = statistics()[0]
+    score_amount = statistics()[1]
+    lives = show_lives()
+    res = show_hp()
+    if res:
+        hp1 = res[0]
+        hp2 = res[1]
+    left = show_enemies_left()
 
-        screen.blit(fps, (925 - fps.get_width() // 2, 20))
-        screen.blit(player_name, (925 - player_name.get_width() // 2, 80))
-        screen.blit(level_num, (925 - level_num.get_width() // 2, 120))
-        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 160))
-        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 160))
-        screen.blit(lives, (925 - lives.get_width() // 2, 200))
+    screen.blit(fps, (925 - fps.get_width() // 2, 20))
+    screen.blit(player_name, (925 - player_name.get_width() // 2, 80))
+    screen.blit(level_num, (925 - level_num.get_width() // 2, 120))
+    screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 160))
+    screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 160))
+    screen.blit(lives, (925 - lives.get_width() // 2, 200))
 
-        if player.health == 100:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 240))
-        elif player.health == 50:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
+    if player.health == 100:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 240))
+    elif player.health == 50:
+        screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+        screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
 
-        screen.blit(left, (925 - left.get_width() // 2, 280))
-
-    except TypeError:
-        respawn()
+    screen.blit(left, (925 - left.get_width() // 2, 280))
 
 
 def show_lives():
@@ -156,15 +154,10 @@ def terminate():
 
 
 def respawn():
-    player.lives -= 1
     player.health = 100
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
-    while pygame.sprite.spritecollideany(player, enemy_group):
-        delta_x = spawn_position[0] * tile_width - player.rect.x + 5
-        delta_y = spawn_position[1] * tile_width - player.rect.y
-        player.rect = player.rect.move(delta_x, delta_y)
 
 
 def start_screen():
@@ -566,7 +559,7 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
         self.distinction = "w"
         self.health = 100
-        self.lives = 3
+        self.lives = 2
 
     def change_position(self):
         move = (0, 0)
@@ -785,12 +778,15 @@ class Shot(pygame.sprite.Sprite):
                     ENEMIES_LEFT -= 1
                 else:
                     change_enemy_image(sprite)
+
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
                 if player.health == 0:
                     player.lives -= 1
                     if player.lives == 0:
                         death_screen()
+                    if player.lives == 1:
+                        respawn()
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
@@ -1012,7 +1008,7 @@ def clear_groups():
 
 
 def bot_spawn(new_bot):
-    x = random.ssssss(1, 14)
+    x = random.randint(1, 14)
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
     new_bot.rect.y = tile_width * y
