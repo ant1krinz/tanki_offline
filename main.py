@@ -72,8 +72,6 @@ def show_info():
         elif player.health == 50:
             screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
             screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
-        if player.lives == 0:
-            death_screen()
 
         screen.blit(left, (925 - left.get_width() // 2, 280))
 
@@ -789,28 +787,13 @@ class Shot(pygame.sprite.Sprite):
                     change_enemy_image(sprite)
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
+                if player.health == 0:
+                    player.lives -= 1
+                    if player.lives == 0:
+                        death_screen()
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
-
-        elif self.parent in skulls_group:
-            print(1)
-            for enemy in pygame.sprite.spritecollide(self, enemy_group, False):
-                all_sprites.remove(self)
-                shot_group.remove(self)
-                enemy.health -= 20
-                if enemy.health == 0:
-                    enemy_group.remove(enemy)
-                    enemy_group2.remove(enemy)
-                    all_sprites.remove(enemy)
-                    ENEMIES_LEFT -= 1
-                else:
-                    change_enemy_image(enemy)
-
-            if pygame.sprite.spritecollideany(self, player_group):
-                player.health -= 50
-                shot_group.remove(self)
-                all_sprites.remove(self)
 
         for car in pygame.sprite.spritecollide(self, cars_group, False):
             car.health -= 25
@@ -1029,7 +1012,7 @@ def clear_groups():
 
 
 def bot_spawn(new_bot):
-    x = random.randint(1, 14)
+    x = random.ssssss(1, 14)
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
     new_bot.rect.y = tile_width * y
