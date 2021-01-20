@@ -274,6 +274,61 @@ def death_screen():
         pygame.display.update()
 
 
+def victory_screen():
+    global WIDTH, HEIGHT
+    fon = pygame.transform.scale(load_image('victory.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.set_caption('Tanki Offline')
+
+    font = pygame.font.Font(None, 57)
+    text = font.render("ВЫ ВЫИГРАЛИ", True, pygame.Color('black'))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2 * 14
+    text_w = text.get_width()
+    text_h = text.get_height()
+
+    manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme2.json')
+
+    exit_game = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 35 * 4), (210, 70)),
+        text='Выйти из игры',
+        manager=manager
+    )
+
+    while True:
+        time_delta = clock.tick(FPS) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == exit_game:
+                        exit_dialog = pygame_gui.windows.UIConfirmationDialog(
+                            rect=pygame.Rect((WIDTH // 2 - 150, HEIGHT // 2 - 130), (300, 260)),
+                            manager=manager,
+                            window_title='Подтверждение',
+                            action_long_desc='Вы уверены, что хотите выйти?',
+                            action_short_name='Ok',
+                            blocking=True
+                        )
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    terminate()
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        screen.blit(fon, (0, 0))
+        pygame.draw.rect(screen, pygame.Color('#FFE44A'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20))
+        pygame.draw.rect(screen, pygame.Color('#000000'), (text_x - 10, text_y - 10,
+                                                           text_w + 20, text_h + 20), 4)
+        screen.blit(text, (text_x, text_y))
+        manager.draw_ui(screen)
+        pygame.display.update()
+
+
 def nickname_window(new):
     global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL, start_new_game
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
@@ -979,6 +1034,10 @@ def restart_game():
 
 def update_level():
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    if SCORE == 7800 and LVL == 6:
+        clear_groups()
+        victory_screen()
+        return
     if SCORE / LVL == 1300:
         clear_groups()
         ENEMIES_LEFT = 13
