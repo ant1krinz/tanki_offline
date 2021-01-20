@@ -154,6 +154,7 @@ def terminate():
 def respawn():
     player.lives -= 1
     player.health = 100
+    player.image = pygame.transform.rotate(player_image, 360)
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
@@ -470,6 +471,7 @@ def load_level(filename):
 tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
+    'flag': load_image('flag.png'),
     'bush': load_image('leaves.png'),
     'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
@@ -640,9 +642,10 @@ def load_snow_images():
     tile_images['border'] = pygame.transform.scale(load_image('snow_border.png'), (50, 50))
     tile_images['wall'] = load_image('snow_box.png')
     tile_images['relsi'] = pygame.transform.rotate(load_image('snow_relsi.png'), 90)
-    tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_snow_relsi.png'), 90)
+    tile_images['broke_relsi'] = pygame .transform.rotate(load_image('broken_snow_relsi.png'), 90)
     tile_images['train'] = pygame.transform.rotate(load_image('snow_train.png'), 90)
     tile_images['car'] = pygame.transform.rotate(load_image('snow_car.png'), 90)
+    tile_images['flag'] = load_image('snow_flag.png')
 
 
 def load_sand_images():
@@ -663,6 +666,7 @@ def load_sand_images():
     tile_images['broke_relsi'] = pygame.transform.rotate(load_image('broken_sand_relsi.png'), 90)
     tile_images['train'] = pygame.transform.rotate(load_image('sand_train_2part.png'), 90)
     tile_images['car'] = pygame.transform.rotate(load_image('sand_car.png'), 90)
+    tile_images['flag'] = load_image('sand_flag.png')
 
 
 def generate_level(level):
@@ -679,7 +683,7 @@ def generate_level(level):
             elif level[y][x] == '%':
                 Tile('border', x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                Tile('flag', x, y)
                 new_player = Player(x, y)
                 spawn_position = x, y
             elif level[y][x] == '!':
@@ -772,6 +776,8 @@ class Shot(pygame.sprite.Sprite):
                     change_enemy_image(sprite)
             if pygame.sprite.spritecollideany(self, player_group):
                 player.health -= 50
+                if player.health == 50:
+                    change_player_image(player)
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
@@ -1174,8 +1180,22 @@ def change_enemy_image(enemy):
         elif dist == 'd':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
+def change_player_image(player):
+    hp = player.health
+    dist = player.distinction
+    if hp == 50:
+        if dist == 'w':
+            player.image = broke_main_tank
+        elif dist == 's':
+            player.image = pygame.transform.rotate(broke_main_tank, 180)
+        elif dist == 'a':
+            player.image = pygame.transform.rotate(broke_main_tank, 90)
+        elif dist == 'd':
+            player.image = pygame.transform.rotate(broke_main_tank, 270)
+
+
 if start_new_game:
-    player, level_x, level_y = generate_level(load_level("level1.txt"))
+    player, level_x, level_y = generate_level(load_level("level3.txt"))
 
     for _ in range(13):
         Enemy()
