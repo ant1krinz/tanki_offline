@@ -4,7 +4,6 @@ import random
 import sqlite3
 import sys
 import time
-
 import pygame
 import pygame_gui
 
@@ -50,6 +49,7 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 def show_info():
     try:
+        player_name = show_player_name()
         fps = update_fps()
         level_num = show_lvl()
         score_text = statistics()[0]
@@ -60,21 +60,22 @@ def show_info():
         left = show_enemies_left()
 
         screen.blit(fps, (925 - fps.get_width() // 2, 20))
-        screen.blit(level_num, (925 - level_num.get_width() // 2, 80))
-        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 120))
-        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 120))
-        screen.blit(lives, (925 - lives.get_width() // 2, 160))
+        screen.blit(player_name, (925 - player_name.get_width() // 2, 80))
+        screen.blit(level_num, (925 - level_num.get_width() // 2, 120))
+        screen.blit(score_text, (925 - 1.5 * score_text.get_width() // 2, 160))
+        screen.blit(score_amount, (925 - score_text.get_width() // 2 + 65, 160))
+        screen.blit(lives, (925 - lives.get_width() // 2, 200))
 
         if player.health == 100:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 200))
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 2.5, 240))
         elif player.health == 50:
-            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 200))
-            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 200))
+            screen.blit(hp1, (925 - hp1.get_width() // 2 - hp2.get_width() // 2, 240))
+            screen.blit(hp2, (925 - hp1.get_width() // 2 + hp2.get_width() * 4.1, 240))
         if player.lives == 0:
             death_screen()
 
-        screen.blit(left, (925 - left.get_width() // 2, 240))
+        screen.blit(left, (925 - left.get_width() // 2, 280))
 
     except TypeError:
         respawn()
@@ -118,6 +119,11 @@ def statistics():
 def show_enemies_left():
     left = smaller_font.render(f'Врагов осталось: {ENEMIES_LEFT}', 1, pygame.Color("white"))
     return left
+
+
+def show_player_name():
+    name = smaller_font.render(PLAYER_NAME, 1, pygame.Color("#6EE2E6"))
+    return name
 
 
 def auto_spawn():
@@ -227,7 +233,7 @@ def death_screen():
 
     manager = pygame_gui.UIManager((WIDTH, HEIGHT), 'data/theme.json')
 
-    continue_play = pygame_gui.elements.UIButton(
+    restart_play = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((WIDTH // 2 - 105, HEIGHT // 2 - 30 * 6), (210, 70)),
         text='Начать заново',
         manager=manager
@@ -255,6 +261,11 @@ def death_screen():
                             action_short_name='Ok',
                             blocking=True
                         )
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == restart_play:
+                        restart_game()
+                        return
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
@@ -312,48 +323,58 @@ def nickname_window(new):
                         db = sqlite3.connect('data/database.db')
                         cur = db.cursor()
                         if entry_name.text:
-                            if new:
-                                res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
-                                if not res1:
-                                    result = cur.execute("""INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
-                                                         (entry_name.text, 1)).fetchall()
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    start_new_game = True
-                                    return
+                            if len(entry_name.text) <= 10:
+                                if new:
+                                    res1 = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                       (entry_name.text,)).fetchall()
+                                    if not res1:
+                                        result = cur.execute(
+                                            """INSERT INTO players_and_levels(name,level) VALUES (?,?)""",
+                                            (entry_name.text, 1)).fetchall()
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        start_new_game = True
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя уже существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
+
                                 else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                    result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
+                                                         (entry_name.text,)).fetchall()
+                                    if result:
+                                        SCORE = 1300 * (result[0][0] - 1)
+                                        if result[0][0] == 1:
+                                            LVL = result[0][0]
+                                            start_new_game = True
+                                        else:
+                                            LVL = result[0][0] - 1
+                                        PLAYER_NAME = entry_name.text
+                                        db.commit()
+                                        db.close()
+                                        return
+                                    else:
+                                        message = pygame_gui.windows.UIMessageWindow(
+                                            rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
+                                            html_message='Введённое имя не существует!',
+                                            window_title='Сообщение',
+                                            manager=manager,
+                                        )
+                                        continue
 
                             else:
-                                result = cur.execute("""SELECT level FROM players_and_levels WHERE name = ?""",
-                                                     (entry_name.text,)).fetchall()
-                                if result:
-                                    SCORE = 1300 * (result[0][0] - 1)
-                                    if result[0][0] == 1:
-                                        LVL = result[0][0]
-                                        start_new_game = True
-                                    else:
-                                        LVL = result[0][0] - 1
-                                    PLAYER_NAME = entry_name.text
-                                    db.commit()
-                                    db.close()
-                                    return
-                                else:
-                                    message = pygame_gui.windows.UIMessageWindow(
-                                        rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
-                                        html_message='Введённый ник не существует!',
-                                        window_title='Сообщение',
-                                        manager=manager,
-                                    )
-                                    continue
+                                message = pygame_gui.windows.UIMessageWindow(
+                                    rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 166), (260, 166)),
+                                    html_message='Длина имени не может превышать 10 символов!',
+                                    window_title='Сообщение',
+                                    manager=manager,
+                                )
                         else:
                             message = pygame_gui.windows.UIMessageWindow(
                                 rect=pygame.Rect((WIDTH // 2 - 130, HEIGHT // 2 - 160), (260, 160)),
@@ -646,7 +667,9 @@ def load_snow_images():
 
 
 def load_sand_images():
-    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, medium_broke_train_image, hard_broke_train_image, low_broke_car_image, medium_broke_car_image, hard_broke_car_image
+    global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, \
+        medium_broke_train_image, hard_broke_train_image, low_broke_car_image, \
+        medium_broke_car_image, hard_broke_car_image
     low_broke_box_image = load_image('low_broke_box_sand.png')
     medium_broke_box_image = load_image('medium_broke_box_sand.png')
     hard_broke_box_image = load_image('hard_broke_box_sand.png')
@@ -735,12 +758,6 @@ class Shot(pygame.sprite.Sprite):
             if self in shot_group_player:
                 shot_group_player.remove(self)
 
-        elif pygame.sprite.spritecollide(self, borders_snow_group, False):
-            all_sprites.remove(self)
-            shot_group.remove(self)
-            if self in shot_group_player:
-                shot_group_player.remove(self)
-
         if self.parent == player:
             for sprite in pygame.sprite.spritecollide(self, enemy_group, False):
                 all_sprites.remove(self)
@@ -757,7 +774,7 @@ class Shot(pygame.sprite.Sprite):
                 if self in shot_group_player:
                     shot_group_player.remove(self)
 
-        else:
+        elif self.parent in enemy_group:
             enemy_group2.remove(self.parent)
             for sprite in pygame.sprite.spritecollide(self, enemy_group2, False):
                 all_sprites.remove(self)
@@ -775,6 +792,25 @@ class Shot(pygame.sprite.Sprite):
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
+
+        elif self.parent in skulls_group:
+            print(1)
+            for enemy in pygame.sprite.spritecollide(self, enemy_group, False):
+                all_sprites.remove(self)
+                shot_group.remove(self)
+                enemy.health -= 20
+                if enemy.health == 0:
+                    enemy_group.remove(enemy)
+                    enemy_group2.remove(enemy)
+                    all_sprites.remove(enemy)
+                    ENEMIES_LEFT -= 1
+                else:
+                    change_enemy_image(enemy)
+
+            if pygame.sprite.spritecollideany(self, player_group):
+                player.health -= 50
+                shot_group.remove(self)
+                all_sprites.remove(self)
 
         for car in pygame.sprite.spritecollide(self, cars_group, False):
             car.health -= 25
@@ -823,29 +859,31 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
-                
-        if pygame.sprite.spritecollideany(self, sand_trains):
-            pygame.sprite.spritecollideany(self, sand_trains).health -= 25
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 75:
-                pygame.sprite.spritecollideany(self, sand_trains).image = low_broke_sand_train_image
+        for strain in pygame.sprite.spritecollide(self, sand_trains, False):
+            strain.health -= 25
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 50:
-                pygame.sprite.spritecollideany(self, sand_trains).image = medium_broke_sand_train_image
+            if strain.health == 75:
+                strain.image = low_broke_sand_train_image
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 25:
-                pygame.sprite.spritecollideany(self, sand_trains).image = hard_broke_sand_train_image
+            if strain.health == 50:
+                strain.image = medium_broke_sand_train_image
 
-            if pygame.sprite.spritecollideany(self, sand_trains).health == 0:
-                pygame.sprite.spritecollideany(self, sand_trains).image = tile_images['broke_relsi']
-                sand_trains.remove(pygame.sprite.spritecollideany(self, sand_trains))
-                all_sprites.remove(pygame.sprite.spritecollideany(self, sand_trains))
+            if strain.health == 25:
+                strain.image = hard_broke_sand_train_image
+
+            if strain.health == 0:
+                x = strain.rect.x / tile_width
+                y = strain.rect.y / tile_width
+                Tile('broke_relsi', x, y)
+                sand_trains.remove(strain)
+                all_sprites.remove(strain)
 
             all_sprites.remove(self)
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
-                
+
         for train in pygame.sprite.spritecollide(self, train_group, False):
             train.health -= 25
             if train.health == 75:
@@ -871,9 +909,10 @@ class Shot(pygame.sprite.Sprite):
 
         for skull in pygame.sprite.spritecollide(self, skulls_group, False):
             skull.health -= 25
-
             if skull.health == 0:
-                skull.image = tile_images['empty']
+                x = skull.rect.x / tile_width
+                y = skull.rect.y / tile_width
+                Tile('empty', x, y)
                 skulls_group.remove(skull)
                 all_sprites.remove(skull)
                 distinctions = ["w", "a", "s", "d"]
@@ -890,10 +929,10 @@ class Shot(pygame.sprite.Sprite):
                     skull.distinction = distinctions[i]
                 Shot(skull.rect.x, skull.rect.y, skull)
 
-                all_sprites.remove(self)
-                shot_group.remove(self)
-                if self in shot_group_player:
-                    shot_group_player.remove(self)
+            all_sprites.remove(self)
+            shot_group.remove(self)
+            if self in shot_group_player:
+                shot_group_player.remove(self)
 
         if pygame.sprite.spritecollideany(self, stone_group):
             all_sprites.remove(self)
@@ -906,8 +945,16 @@ class Shot(pygame.sprite.Sprite):
             shot_group.remove(self)
             if self in shot_group_player:
                 shot_group_player.remove(self)
+
+
 def level():
-    global LVL
+    global PLAYER_NAME, LVL
+    db = sqlite3.connect("data/database.db")
+    cur = db.cursor()
+    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
+                         (LVL, PLAYER_NAME)).fetchall()
+    db.commit()
+    db.close()
     screen.fill((0, 0, 0))
     font = pygame.font.Font(None, 50)
     text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
@@ -919,7 +966,7 @@ def level():
     text_y2 = HEIGHT // 1.8 - text.get_height() // 10
     screen.blit(text, (text_x, text_y))
     screen.blit(second_text, (text_x2, text_y2))
-    load_snow_images()
+    playing = True
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -931,8 +978,18 @@ def level():
         clock.tick(FPS)
 
 
-level()
-
+def restart_game():
+    global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
+    clear_groups()
+    if LVL == 1:
+        SCORE = 0
+    else:
+        SCORE = (LVL - 1) * 1300
+    ENEMIES_LEFT = 13
+    player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
+    for _ in range(13):
+        Enemy()
+    level()
 
 
 def update_level():
@@ -941,10 +998,15 @@ def update_level():
         clear_groups()
         ENEMIES_LEFT = 13
         LVL += 1
+        if LVL == 3 or LVL == 4:
+            load_snow_images()
+        if LVL == 5 or LVL == 6:
+            load_sand_images()
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
             Enemy()
         level()
+
 
 def clear_groups():
     all_sprites.empty()
@@ -1174,15 +1236,18 @@ def change_enemy_image(enemy):
         elif dist == 'd':
             enemy.image = pygame.transform.rotate(medium_broke_tank_image, 90)
 
+
 if start_new_game:
     player, level_x, level_y = generate_level(load_level("level1.txt"))
-
     for _ in range(13):
         Enemy()
+    level()
 
 pygame.display.set_caption('Tanki Offline')
 
-while True:
+running = True
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
