@@ -983,9 +983,9 @@ def update_level():
         clear_groups()
         ENEMIES_LEFT = 13
         LVL += 1
-        if LVL == 3:
+        if LVL == 3 or LVL == 4:
             load_snow_images()
-        if LVL == 5:
+        if LVL == 5 or LVL == 6:
             load_sand_images()
         player, level_x, level_y = generate_level(load_level("level{}.txt".format(LVL)))
         for _ in range(13):
