@@ -1187,7 +1187,7 @@ class Enemy(pygame.sprite.Sprite):
                             self.image = pygame.transform.rotate(self.image, 180)
                             self.distinction = 's'
                 enemy_group2.add(self)
-            res3 = random.randint(1, 100)
+            res3 = random.randint(1, 80)
             if res3 == 1:
                 Shot(self.rect.x, self.rect.y, self)
 
