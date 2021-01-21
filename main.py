@@ -818,7 +818,7 @@ class Shot(pygame.sprite.Sprite):
                 if self in shot_group_player:
                     shot_group_player.remove(self)
 
-        elif self.parent in enemy_group:
+        else:
             enemy_group2.remove(self.parent)
             for sprite in pygame.sprite.spritecollide(self, enemy_group2, False):
                 all_sprites.remove(self)
@@ -844,7 +844,9 @@ class Shot(pygame.sprite.Sprite):
                     change_tank_image()
                 shot_group.remove(self)
                 all_sprites.remove(self)
-            enemy_group2.add(self.parent)
+            if self.parent in enemy_group:
+                enemy_group2.add(self.parent)
+
 
         for car in pygame.sprite.spritecollide(self, cars_group, False):
             car.health -= 25
@@ -942,15 +944,16 @@ class Shot(pygame.sprite.Sprite):
                 shot_group_player.remove(self)
 
         for skull in pygame.sprite.spritecollide(self, skulls_group, False):
+
             skull.health -= 25
             if skull.health == 0:
                 x = skull.rect.x / tile_width
                 y = skull.rect.y / tile_width
                 Tile('empty', x, y)
+                distinctions = ["w", "a", "s", "d"]
                 skulls_group.remove(skull)
                 all_sprites.remove(skull)
-                distinctions = ["w", "a", "s", "d"]
-
+                tiles_group.remove(skull)
                 for i in range(1, 4):
                     Shot(skull.rect.x, skull.rect.y, skull)
                     skull.distinction = distinctions[i]
@@ -1329,3 +1332,4 @@ while running:
     pygame.display.flip()
     auto_spawn()
     clock.tick(FPS)
+
