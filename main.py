@@ -530,7 +530,6 @@ def load_level(filename):
 tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('beton.png'),
-    'bush': load_image('leaves.png'),
     'skull': load_image('skull.png'),
     'border': pygame.transform.scale(load_image('border.png'), (50, 50)),
     'relsi': pygame.transform.rotate(load_image('relsi.png'), 90),
