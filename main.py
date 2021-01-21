@@ -19,9 +19,7 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 walls_group = pygame.sprite.Group()
 skulls_group = pygame.sprite.Group()
-bushes_group = pygame.sprite.Group()
 borders_group = pygame.sprite.Group()
-borders_snow_group = pygame.sprite.Group()
 shot_group = pygame.sprite.Group()
 shot_group_player = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
@@ -579,8 +577,6 @@ class Tile(pygame.sprite.Sprite):
         self.health = 100
         if tile_type == 'wall':
             walls_group.add(self)
-        if tile_type == 'bush':
-            bushes_group.add(self)
         if tile_type == 'border':
             borders_group.add(self)
         if tile_type == 'train':
@@ -671,8 +667,6 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, sand_trains):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, borders_group):
-            self.rect = self.rect.move(-move[0], -move[1])
-        if pygame.sprite.spritecollideany(self, borders_snow_group):
             self.rect = self.rect.move(-move[0], -move[1])
         if pygame.sprite.spritecollideany(self, enemy_group):
             self.rect = self.rect.move(-move[0], -move[1])
@@ -1059,12 +1053,10 @@ def clear_groups():
     kaktus_group.empty()
     player_group.empty()
     borders_group.empty()
-    borders_snow_group.empty()
     stone_group.empty()
     tiles_group.empty()
     enemy_group.empty()
     enemy_group2.empty()
-    bushes_group.empty()
     train_group.empty()
     skulls_group.empty()
     cars_group.empty()
@@ -1077,7 +1069,6 @@ def bot_spawn(new_bot):
     new_bot.rect.y = tile_width * y
     while pygame.sprite.spritecollideany(new_bot, walls_group) \
             or pygame.sprite.spritecollideany(new_bot, borders_group) \
-            or pygame.sprite.spritecollideany(new_bot, borders_snow_group) \
             or pygame.sprite.spritecollideany(new_bot, sand_trains) \
             or pygame.sprite.spritecollideany(new_bot, kaktus_group) \
             or pygame.sprite.spritecollideany(new_bot, stone_group) \
@@ -1113,7 +1104,6 @@ class Enemy(pygame.sprite.Sprite):
                 delta = (0, tile_width / 15)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollide(self, borders_group, False) or \
-                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
                         pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, kaktus_group) or \
@@ -1149,7 +1139,6 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
-                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
                         pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, kaktus_group) or \
@@ -1186,7 +1175,6 @@ class Enemy(pygame.sprite.Sprite):
                 enemy_group2.remove(self)
                 self.rect = self.rect.move(delta)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
-                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
                         pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, kaktus_group) or \
@@ -1223,7 +1211,6 @@ class Enemy(pygame.sprite.Sprite):
                 self.rect = self.rect.move(delta)
                 enemy_group2.remove(self)
                 if pygame.sprite.spritecollideany(self, borders_group) or \
-                        pygame.sprite.spritecollideany(self, borders_snow_group) or \
                         pygame.sprite.spritecollideany(self, stone_group) or \
                         pygame.sprite.spritecollideany(self, walls_group) or \
                         pygame.sprite.spritecollideany(self, kaktus_group) or \
