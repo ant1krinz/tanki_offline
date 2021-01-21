@@ -155,10 +155,13 @@ def terminate():
 
 
 def respawn():
+    global player_image
     player.health = 100
     delta_x = spawn_position[0] * tile_width - player.rect.x
     delta_y = spawn_position[1] * tile_width - player.rect.y
     player.rect = player.rect.move(delta_x, delta_y)
+    player.distinction = 'w'
+    player.image = player_image
 
 
 def start_screen():
@@ -837,6 +840,8 @@ class Shot(pygame.sprite.Sprite):
                         death_screen()
                     if player.lives == 1:
                         respawn()
+                elif player.health == 50:
+                    change_tank_image()
                 shot_group.remove(self)
                 all_sprites.remove(self)
             enemy_group2.add(self.parent)
@@ -1248,6 +1253,19 @@ class Enemy(pygame.sprite.Sprite):
             res3 = random.randint(1, 80)
             if res3 == 1:
                 Shot(self.rect.x, self.rect.y, self)
+
+
+def change_tank_image():
+    broken_image = load_image('broke_tank.png')
+    dist = player.distinction
+    if dist == 'w':
+        player.image = broken_image
+    elif dist == 's':
+        player.image = pygame.transform.rotate(broken_image, 180)
+    elif dist == 'a':
+        player.image = pygame.transform.rotate(broken_image, 90)
+    elif dist == 'd':
+        player.image = pygame.transform.rotate(broken_image, 270)
 
 
 def change_enemy_image(enemy):
