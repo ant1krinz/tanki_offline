@@ -445,7 +445,7 @@ def nickname_window(new):
         pygame.display.update()
 
 
-def main_menu():
+def main_menu(error=False):
     global WIDTH, HEIGHT
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -470,6 +470,16 @@ def main_menu():
         text='Выйти из игры',
         manager=manager
     )
+
+    if error:
+        message = pygame_gui.windows.UIMessageWindow(
+            rect=pygame.Rect((WIDTH // 2 - 140, HEIGHT // 2 - 160), (280, 170)),
+            html_message='Извините!'
+                         '<br>'
+                         'Что-то пошло не так...',
+            window_title='Сообщение',
+            manager=manager,
+        )
 
     while True:
         time_delta = clock.tick(FPS) / 1000.0
@@ -842,7 +852,6 @@ class Shot(pygame.sprite.Sprite):
                 all_sprites.remove(self)
             if self.parent in enemy_group:
                 enemy_group2.add(self.parent)
-
 
         for car in pygame.sprite.spritecollide(self, cars_group, False):
             car.health -= 25
@@ -1294,30 +1303,33 @@ pygame.display.set_caption('Tanki Offline')
 running = True
 
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            terminate()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if len(shot_group_player) < 1:
-                shot = Shot(player.rect.x, player.rect.y, player)
+    try:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if len(shot_group_player) < 1:
+                    shot = Shot(player.rect.x, player.rect.y, player)
 
-    update_level()
-    start_time = time.time()
-    player.change_position()
-    screen.fill((0, 0, 0))
-    all_sprites.draw(screen)
-    show_info()
-    player_group.draw(screen)
-    shot_group.draw(screen)
-    shot_group.update()
-    walls_group.update()
-    kaktus_group.update()
-    sand_trains.update()
-    train_group.update()
-    skulls_group.update()
-    enemy_group.draw(screen)
-    enemy_group.update()
-    pygame.display.flip()
-    auto_spawn()
-    clock.tick(FPS)
+        update_level()
+        start_time = time.time()
+        player.change_position()
+        screen.fill((0, 0, 0))
+        all_sprites.draw(screen)
+        show_info()
+        player_group.draw(screen)
+        shot_group.draw(screen)
+        shot_group.update()
+        walls_group.update()
+        kaktus_group.update()
+        sand_trains.update()
+        train_group.update()
+        skulls_group.update()
+        enemy_group.draw(screen)
+        enemy_group.update()
+        pygame.display.flip()
+        auto_spawn()
+        clock.tick(FPS)
 
+    except Exception:
+        main_menu(error=True)
