@@ -7,6 +7,8 @@ import time
 import pygame
 import pygame_gui
 
+# блок определения начальных данных
+
 clock = pygame.time.Clock()
 pygame.init()
 size = WIDTH, HEIGHT = 1050, 700
@@ -47,6 +49,8 @@ font_for_fps = pygame.font.SysFont('Century Gothic', 40)
 
 
 def show_info():
+    # функция отображения всей игровой статистической информации
+
     player_name = show_player_name()
     fps = update_fps()
     level_num = show_lvl()
@@ -75,6 +79,8 @@ def show_info():
 
     screen.blit(left, (925 - left.get_width() // 2, 280))
 
+
+# функции, возвращающие определённую игровую информацию
 
 def show_lives():
     lives_text = font.render(f'Жизни: {player.lives}', 1, pygame.Color("white"))
@@ -122,6 +128,8 @@ def show_player_name():
 
 
 def auto_spawn():
+    # функция, которая "доспавнивает" врагов при необходимости
+
     global ENEMIES_LEFT
     necessary = 1300 * LVL - SCORE
     if ENEMIES_LEFT <= 5:
@@ -131,6 +139,8 @@ def auto_spawn():
 
 
 def load_image(name, colorkey=None):
+    # функция загрузки изображения
+
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -148,11 +158,15 @@ def load_image(name, colorkey=None):
 
 
 def terminate():
+    # функция закрытия окна
+
     pygame.quit()
     sys.exit()
 
 
 def respawn():
+    # функция респавна игрока при потери жизни
+
     global player_image
     player.health = 100
     delta_x = spawn_position[0] * tile_width - player.rect.x
@@ -163,6 +177,8 @@ def respawn():
 
 
 def start_screen():
+    # функция отображения интро
+
     fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('Tanki Offline')
@@ -181,6 +197,9 @@ start_screen()
 
 
 def level():
+    # функция отображения начального экрана каждого уровня
+    # обновление базы данных
+
     global PLAYER_NAME, LVL
     db = sqlite3.connect("data/database.db")
     cur = db.cursor()
@@ -212,6 +231,8 @@ def level():
 
 
 def death_screen():
+    # функция отображения окна после потери игроком всех жизней ("экран смерти")
+
     global WIDTH, HEIGHT
     fon = pygame.transform.scale(load_image('death_screen.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -276,6 +297,8 @@ def death_screen():
 
 
 def victory_screen():
+    # функция отображения экрана "победы" игрока
+
     global WIDTH, HEIGHT
     fon = pygame.transform.scale(load_image('victory.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -331,6 +354,9 @@ def victory_screen():
 
 
 def nickname_window(new):
+    # функция отображения окна ввода ника
+    # занесение информации в базу данных
+
     global WIDTH, HEIGHT, PLAYER_NAME, SCORE, LVL, start_new_game
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -446,6 +472,8 @@ def nickname_window(new):
 
 
 def main_menu(error=False):
+    # функция отображения главного меню
+
     global WIDTH, HEIGHT
     fon = pygame.transform.scale(load_image('tanki_online.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -528,12 +556,16 @@ main_menu()
 
 
 def load_level(filename):
+    # функция, преобразующая текстовый файл в массив
+
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
+
+# блок спрайтов
 
 tile_images = {
     'wall': load_image('box.png'),
@@ -579,6 +611,8 @@ tile_width = tile_height = 50
 
 
 class Tile(pygame.sprite.Sprite):
+    # класс всех статичных объектов
+
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
@@ -609,6 +643,8 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
+    # класс игрока (главного танка)
+
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
@@ -619,6 +655,8 @@ class Player(pygame.sprite.Sprite):
         self.lives = 2
 
     def change_position(self):
+        # метод перемещения игрока
+
         move = (0, 0)
 
         if pygame.key.get_pressed()[pygame.K_w]:
@@ -696,6 +734,8 @@ spawn_position = 0, 0
 
 
 def load_snow_images():
+    # функция, загружающая спрайты под снежный биом
+
     global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, medium_broke_train_image, hard_broke_train_image
     low_broke_box_image = load_image('low_broke_box_snow.png')
     medium_broke_box_image = load_image('medium_broke_box_snow.png')
@@ -714,6 +754,8 @@ def load_snow_images():
 
 
 def load_sand_images():
+    # функция, загружающая спрайты под песчаный биом
+
     global low_broke_box_image, medium_broke_box_image, hard_broke_box_image, tile_images, low_broke_train_image, \
         medium_broke_train_image, hard_broke_train_image, low_broke_car_image, \
         medium_broke_car_image, hard_broke_car_image
@@ -737,6 +779,8 @@ def load_sand_images():
 
 
 def generate_level(level):
+    # функция, генерирующая уровень из текстового файла
+
     global spawn_position
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -773,6 +817,8 @@ def generate_level(level):
 
 
 class Shot(pygame.sprite.Sprite):
+    # класс выстрела
+
     def __init__(self, pos_x, pos_y, parent):
         super().__init__(shot_group, all_sprites)
         self.image = pygame.transform.scale(shot_image, (20, 20))
@@ -799,6 +845,8 @@ class Shot(pygame.sprite.Sprite):
             self.vx = 0
 
     def update(self):
+        # метод update
+
         global SCORE, ENEMIES_LEFT
         self.rect = self.rect.move(self.vx, self.vy)
 
@@ -988,38 +1036,9 @@ class Shot(pygame.sprite.Sprite):
                 shot_group_player.remove(self)
 
 
-def level():
-    global PLAYER_NAME, LVL
-    db = sqlite3.connect("data/database.db")
-    cur = db.cursor()
-    result = cur.execute("""UPDATE players_and_levels SET level = ? WHERE name = ?""",
-                         (LVL, PLAYER_NAME)).fetchall()
-    db.commit()
-    db.close()
-    screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 50)
-    text = font.render(f"УРОВЕНЬ {LVL}", True, (255, 255, 255))
-    text_x = WIDTH // 2 - text.get_width() // 2
-    text_y = HEIGHT // 2 - text.get_height()
-    font2 = pygame.font.Font(None, 40)
-    second_text = font2.render("НАЖМИТЕ ЛЮБУЮ КНОПКУ ЧТОБЫ НАЧАТЬ", True, (255, 255, 255))
-    text_x2 = WIDTH // 4 - text.get_width() // 4
-    text_y2 = HEIGHT // 1.8 - text.get_height() // 10
-    screen.blit(text, (text_x, text_y))
-    screen.blit(second_text, (text_x2, text_y2))
-    playing = True
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return
-        pygame.display.flip()
-        clock.tick(FPS)
-
-
 def restart_game():
+    # функция, производящая повторный запуск уровня, на котором находится игрок
+
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     clear_groups()
     if LVL == 1:
@@ -1034,6 +1053,8 @@ def restart_game():
 
 
 def update_level():
+    # функция, производящая переход на новый уровень
+
     global SCORE, LVL, player, level_x, level_y, ENEMIES_LEFT
     if SCORE == 7800 and LVL == 6:
         clear_groups()
@@ -1054,6 +1075,8 @@ def update_level():
 
 
 def clear_groups():
+    # функция, очищающая все группы спрайтов
+
     all_sprites.empty()
     shot_group.empty()
     shot_group_player.empty()
@@ -1072,6 +1095,8 @@ def clear_groups():
 
 
 def bot_spawn(new_bot):
+    # функция, генерирующая ботов
+
     x = random.randint(1, 14)
     y = random.randint(1, 8)
     new_bot.rect.x = tile_width * x
@@ -1093,6 +1118,8 @@ def bot_spawn(new_bot):
 
 
 class Enemy(pygame.sprite.Sprite):
+    # класс врага
+
     def __init__(self):
         super().__init__(all_sprites)
         self.image = enemy_image
@@ -1106,6 +1133,8 @@ class Enemy(pygame.sprite.Sprite):
         enemy_group2.add(self)
 
     def update(self):
+        # метод update
+
         distance = math.sqrt((player.rect.x - self.rect.x) ** 2 + (player.rect.y - self.rect.y) ** 2)
         if not self.follow:
             if self.distinction == 's':
@@ -1256,6 +1285,8 @@ class Enemy(pygame.sprite.Sprite):
 
 
 def change_tank_image():
+    # функция, изменяющая внешний вид главного танка
+
     broken_image = load_image('broke_tank.png')
     dist = player.distinction
     if dist == 'w':
@@ -1269,6 +1300,8 @@ def change_tank_image():
 
 
 def change_enemy_image(enemy):
+    # функция, изменяющая внешний вид вражеского танка
+
     hp = enemy.health
     dist = enemy.distinction
     if hp == 40:
@@ -1301,6 +1334,8 @@ if start_new_game:
 pygame.display.set_caption('Tanki Offline')
 
 running = True
+
+# главный цикл игры
 
 while running:
     try:
