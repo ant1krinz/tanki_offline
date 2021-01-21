@@ -577,6 +577,7 @@ class Tile(pygame.sprite.Sprite):
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
+        self.health = 100
         if tile_type == 'wall':
             walls_group.add(self)
         if tile_type == 'bush':
@@ -590,6 +591,7 @@ class Tile(pygame.sprite.Sprite):
         if tile_type == 'skull':
             skulls_group.add(self)
             self.distinction = 'w'
+            self.health = 50
         if tile_type == 'stone':
             stone_group.add(self)
         if tile_type == 'sandy_train_main':
@@ -598,7 +600,6 @@ class Tile(pygame.sprite.Sprite):
             kaktus_group.add(self)
         if tile_type == 'spawn':
             spawn_group.add(self)
-        self.health = 100
         self.type = tile_type
 
 
@@ -944,7 +945,6 @@ class Shot(pygame.sprite.Sprite):
                 shot_group_player.remove(self)
 
         for skull in pygame.sprite.spritecollide(self, skulls_group, False):
-
             skull.health -= 25
             if skull.health == 0:
                 x = skull.rect.x / tile_width
