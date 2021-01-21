@@ -764,6 +764,8 @@ def generate_level(level):
                 Tile('sandy_train_main', x, y)
             elif level[y][x] == '9':
                 Tile('kaktus', x, y)
+            elif level[y][x] == '?':
+                Tile('broke_relsi', x, y)
     return new_player, x, y
 
 
