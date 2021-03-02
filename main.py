@@ -1343,8 +1343,9 @@ while running:
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if len(shot_group_player) < 1:
-                    shot = Shot(player.rect.x, player.rect.y, player)
+                if event.button == 1:
+                    if len(shot_group_player) < 1:
+                        shot = Shot(player.rect.x, player.rect.y, player)
 
         update_level()
         start_time = time.time()
